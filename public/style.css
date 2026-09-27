@@ -5,13 +5,10 @@
     font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
 }
 
-body {
+body, html {
+    height: 100%;
+    width: 100%;
     background-color: #dadbd4;
-    height: 100vh;
-    width: 100vw;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     overflow: hidden;
 }
 
@@ -20,13 +17,12 @@ body {
     height: 100%;
     background-color: #f0f2f5;
     display: flex;
-    position: relative;
 }
 
 /* PP Grup Bersama */
 .group-avatar-bg {
-    width: 42px;
-    height: 42px;
+    width: 45px;
+    height: 45px;
     background-color: #00a884;
     border-radius: 50%;
     display: flex;
@@ -37,16 +33,9 @@ body {
     flex-shrink: 0;
 }
 
-.chat-avatar.group-avatar-bg {
-    width: 49px;
-    height: 49px;
-    font-size: 20px;
-}
-
-/* Sidebar Kiri */
+/* Sidebar */
 .sidebar {
-    width: 340px;
-    min-width: 300px;
+    width: 320px;
     background-color: #ffffff;
     border-right: 1px solid #d1d7db;
     display: flex;
@@ -61,7 +50,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-shrink: 0;
 }
 
 .user-profile img {
@@ -72,17 +60,15 @@ body {
 
 .sidebar-icons {
     display: flex;
-    gap: 18px;
+    gap: 15px;
     color: #54656f;
     font-size: 18px;
-    cursor: pointer;
 }
 
 .search-container {
     padding: 8px 12px;
     background-color: #ffffff;
     border-bottom: 1px solid #f0f2f5;
-    flex-shrink: 0;
 }
 
 .search-box {
@@ -91,7 +77,7 @@ body {
     align-items: center;
     padding: 8px 12px;
     border-radius: 8px;
-    gap: 15px;
+    gap: 10px;
 }
 
 .search-box input {
@@ -105,7 +91,6 @@ body {
 .chat-list {
     flex: 1;
     overflow-y: auto;
-    background-color: #ffffff;
 }
 
 .chat-item {
@@ -171,7 +156,6 @@ body {
     justify-content: space-between;
     align-items: center;
     border-left: 1px solid #d1d7db;
-    flex-shrink: 0;
 }
 
 .active-profile {
@@ -197,10 +181,9 @@ body {
     gap: 20px;
     color: #54656f;
     font-size: 17px;
-    cursor: pointer;
 }
 
-/* Container Pesan */
+/* Kontainer Pesan */
 .messages-container {
     flex: 1;
     padding: 15px 20px;
@@ -222,18 +205,16 @@ body {
     align-self: center;
 }
 
-/* Perbaikan Gelembung Pesan Supaya Menyamping Normal */
+/* PERBAIKAN UTAMA: Gelembung Pesan Menyamping Normal */
 .message {
-    min-width: 120px;
-    max-width: 65%;
-    width: fit-content;
-    padding: 6px 10px 8px 10px;
+    max-width: 70%;
+    width: max-content;
+    padding: 6px 10px 22px 10px; /* Padding bawah dilebihkan untuk jam */
     border-radius: 7.5px;
     position: relative;
     font-size: 14px;
     box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-    animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
-    word-break: break-word;
+    animation: fadeInScale 0.25s ease-out;
 }
 
 @keyframes fadeInScale {
@@ -263,8 +244,8 @@ body {
 
 .message p {
     color: #111b21;
-    display: inline;
-    padding-right: 35px; /* Ruang untuk jam */
+    word-wrap: break-word;
+    display: block;
 }
 
 .msg-time {
@@ -316,7 +297,6 @@ body {
     display: flex;
     align-items: center;
     gap: 12px;
-    flex-shrink: 0;
 }
 
 .footer-icons {
@@ -324,7 +304,6 @@ body {
     gap: 15px;
     color: #54656f;
     font-size: 19px;
-    cursor: pointer;
 }
 
 .message-input-box {
