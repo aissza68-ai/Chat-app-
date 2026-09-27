@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FULL SCRIPT.JS - GABUNGAN UTUH (LOGIN, SOCKET, KIRIM PESAN, & PENGAMAN SWIPE)
+   FULL SCRIPT.JS - LENGKAP SEUTUHNYA (LOGIN, SOCKET, CHAT, & PENGAMAN SWIPE)
    ========================================================================== */
 
 const socket = io();
@@ -9,8 +9,7 @@ let replyingToMessage = null;
 let selectedMessageIdForDelete = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. Tangani Form Login Sesuai HTML Asli
+    // 1. Inisialisasi Form Login (Sesuai HTML lu)
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
@@ -37,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('chat-screen').style.display = 'flex';
 
-            // Set info di header chat
+            // Set nama dan ID di header chat
             document.getElementById('header-user-name').textContent = currentUser.name;
             document.getElementById('header-user-id').textContent = "ID: " + currentUser.id;
         });
     }
 
-    // 2. Tombol Kirim Pesan & Tombol Enter
+    // 2. Tombol Kirim Pesan & Enter
     const sendBtn = document.getElementById('send-btn');
     const messageInput = document.getElementById('message-input');
 
@@ -56,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Batalkan Reply Preview
+    // 3. Tombol Batal Pratinjau Balasan (Reply)
     const cancelReplyBtn = document.getElementById('cancel-reply');
     if (cancelReplyBtn) {
         cancelReplyBtn.addEventListener('click', () => {
@@ -66,14 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Modal Delete Listener
+    // 4. Modal Hapus Pesan (Delete Modal)
     document.getElementById('btn-cancel-delete')?.addEventListener('click', closeDeleteModal);
+    
     document.getElementById('btn-delete-forme')?.addEventListener('click', () => {
         if (selectedMessageIdForDelete) {
             socket.emit('delete_message', { messageId: selectedMessageIdForDelete, type: 'me' });
             closeDeleteModal();
         }
     });
+
     document.getElementById('btn-delete-foreveryone')?.addEventListener('click', () => {
         if (selectedMessageIdForDelete) {
             socket.emit('delete_message', { messageId: selectedMessageIdForDelete, type: 'everyone' });
@@ -100,17 +101,17 @@ function sendMessage() {
         isDeleted: false
     };
 
-    // Kirim pesan ke server via Socket.IO
+    // Kirim data pesan ke server via Socket.IO
     socket.emit('send_message', messageData);
 
-    // Reset input dan pratinjau balasan
+    // Kosongkan input dan hapus preview reply
     messageInput.value = '';
     replyingToMessage = null;
     const replyPreview = document.getElementById('reply-preview');
     if (replyPreview) replyPreview.style.display = 'none';
 }
 
-// Socket.IO Listener Menerima Pesan dari Server
+// Socket.IO Menerima Pesan dari Server
 socket.on('receive_message', (messagesArray) => {
     renderMessages(messagesArray);
 });
@@ -156,7 +157,7 @@ function renderMessages(messagesArray) {
             // Pasang event geser (swipe-to-reply) HANYA PADA PESAN YANG AKTIF
             attachSwipeListener(messageDiv, msg);
 
-            // Tambahan event klik untuk opsi hapus pesan (buka modal delete)
+            // Event klik untuk membuka modal opsi hapus pesan
             messageDiv.addEventListener('click', () => {
                 if (!msg.isDeleted) {
                     openDeleteModal(msg.id, isSelf);
@@ -205,7 +206,6 @@ function attachSwipeListener(element, messageData) {
 
         // Jika digeser ke kanan sejauh lebih dari 60px
         if (diffX > 60) {
-            // Validasi akhir sebelum memicu pratinjau balasan
             if (!messageData.isDeleted && messageData.text !== "Pesan ini telah dihapus") {
                 replyingToMessage = messageData;
                 
@@ -224,7 +224,7 @@ function attachSwipeListener(element, messageData) {
     });
 }
 
-// Fungsi Mengelola Modal Hapus Pesan
+// Fungsi Modal Hapus Pesan
 function openDeleteModal(messageId, isSelf) {
     selectedMessageIdForDelete = messageId;
     const modal = document.getElementById('delete-modal');
@@ -255,4 +255,4 @@ function escapeHtml(text) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-                             }
+           }
