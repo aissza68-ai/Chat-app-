@@ -32,8 +32,7 @@
             </div>
 
             <div class="chat-list">
-                <!-- Item Grup dengan PP Grup Bersama -->
-                <div class="chat-item active" onclick="switchChat('Grup Developer AI')">
+                <div class="chat-item active">
                     <div class="chat-avatar group-avatar-bg">
                         <i class="fa-solid fa-users"></i>
                     </div>
@@ -44,7 +43,6 @@
                         </div>
                         <div class="chat-last-msg">
                             <p id="preview-msg">Keren banget animasinya!</p>
-                            <span class="badge" id="unread-badge" style="display:none;">1</span>
                         </div>
                     </div>
                 </div>
@@ -55,23 +53,23 @@
         <div class="chat-area">
             <div class="chat-header">
                 <div class="active-profile" onclick="toggleGroupInfo()">
-                    <div class="active-avatar group-avatar-bg">
+                    <div class="group-avatar-bg" style="width: 40px; height: 40px; font-size: 16px;">
                         <i class="fa-solid fa-users"></i>
                     </div>
                     <div class="active-info">
                         <h3>Grup Developer AI</h3>
-                        <p id="group-members-desc">Andi, Budi, Sinta, Siti, Anda</p>
+                        <p>Andi, Budi, Sinta, Siti, Anda</p>
                     </div>
                 </div>
                 <div class="header-icons">
-                    <i class="fa-solid fa-video" title="Video Call"></i>
-                    <i class="fa-solid fa-phone" title="Panggilan Suara"></i>
-                    <i class="fa-solid fa-magnifying-glass" title="Cari Pesan"></i>
-                    <i class="fa-solid fa-ellipsis-vertical" title="Menu Lainnya" onclick="toggleGroupInfo()"></i>
+                    <i class="fa-solid fa-video"></i>
+                    <i class="fa-solid fa-phone"></i>
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" onclick="toggleGroupInfo()"></i>
                 </div>
             </div>
 
-            <!-- Ruang Pesan / Chat Messages -->
+            <!-- Ruang Pesan -->
             <div class="messages-container" id="messages-container">
                 <div class="encryption-notice">
                     <i class="fa-solid fa-lock"></i> Pesan dan panggilan bersifat end-to-end encryption.
@@ -94,7 +92,7 @@
                 </div>
             </div>
 
-            <!-- Indikator Sedang Mengetik -->
+            <!-- Indikator Mengetik -->
             <div class="typing-indicator" id="typing-indicator" style="display: none;">
                 <span></span><span></span><span></span> <i id="typing-text">Siti sedang mengetik...</i>
             </div>
@@ -102,14 +100,14 @@
             <!-- Footer / Input Chat -->
             <div class="chat-footer">
                 <div class="footer-icons">
-                    <i class="fa-regular fa-face-smile" title="Emoji"></i>
-                    <i class="fa-solid fa-paperclip" title="Lampirkan" onclick="sendAttachment()"></i>
+                    <i class="fa-regular fa-face-smile"></i>
+                    <i class="fa-solid fa-paperclip" onclick="sendAttachment()"></i>
                 </div>
                 <div class="message-input-box">
                     <input type="text" id="message-input" placeholder="Ketik pesan..." onkeypress="handleKeyPress(event)">
                 </div>
                 <div class="footer-send" onclick="sendMessage()">
-                    <i class="fa-solid fa-paper-plane" id="send-icon"></i>
+                    <i class="fa-solid fa-paper-plane"></i>
                 </div>
             </div>
         </div>
