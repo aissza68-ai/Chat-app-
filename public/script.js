@@ -73,7 +73,6 @@ function playSound(type) {
     }
 
     if (type === 'send') {
-        // Suara Pop Singkat saat Kirim
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
@@ -87,7 +86,6 @@ function playSound(type) {
         osc.stop(audioCtx.currentTime + 0.08);
 
     } else if (type === 'receive') {
-        // Suara Ding-Ding saat Ada Pesan Masuk
         const now = audioCtx.currentTime;
         const osc1 = audioCtx.createOscillator();
         const osc2 = audioCtx.createOscillator();
@@ -126,6 +124,13 @@ socket.on('update-online-users', (users) => {
             <span class="online-name">${u.username || 'User'}</span>
             <span class="online-id-badge">ID: ${u.userId}</span>
         `;
+        // Klik pengguna online untuk langsung men-tag
+        card.onclick = () => {
+            if (messageInput) {
+                messageInput.value += `@${u.username} `;
+                messageInput.focus();
+            }
+        };
         onlineUsersList.appendChild(card);
     });
 });
@@ -170,7 +175,6 @@ function executeLogin(e) {
     if (!userId) return alert('Silakan isi ID Pengguna!');
     if (!password) return alert('Silakan isi Password!');
 
-    // Aktifkan Audio Context saat klik user
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
     socket.emit('user-login', { userId, password, name });
@@ -195,7 +199,6 @@ socket.on('login-response', (res) => {
         if (loginScreen) loginScreen.style.display = 'none';
         if (chatScreen) chatScreen.style.display = 'flex';
 
-        // Minta Izin Notifikasi Browser
         if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
             Notification.requestPermission();
         }
@@ -214,13 +217,19 @@ socket.on('login-response', (res) => {
     }
 });
 
-// FUNGSI NOTIFIKASI PESAN
+// FUNGSI NOTIFIKASI PESAN DENGAN DETEKSI TAG / MENTION
 function showNotification(msg) {
     if (!("Notification" in window)) return;
 
     if (document.hidden && Notification.permission === "granted" && msg.userId !== currentUserId) {
         let title = `Pesan dari ${msg.sender}`;
         let bodyText = '';
+
+        // Deteksi apakah pengguna di-tag
+        const isTagged = msg.text && (msg.text.includes(`@${currentUsername}`) || msg.text.includes('@everyone') || msg.text.includes('@all'));
+        if (isTagged) {
+            title = `🔔 Anda dimention oleh ${msg.sender}!`;
+        }
 
         if (msg.type === 'image') bodyText = '📷 Mengirim gambar';
         else if (msg.type === 'video') bodyText = '🎥 Mengirim video';
@@ -293,7 +302,7 @@ function sendTextMessage() {
     };
 
     renderMessage(msgData);
-    playSound('send'); // <-- Suara Kirim
+    playSound('send');
     socket.emit('chat message', msgData);
 
     messageInput.value = '';
@@ -431,7 +440,7 @@ function uploadFileWithProgress(file, typeName) {
             };
 
             renderMessage(msgData);
-            playSound('send'); // <-- Suara Kirim Media
+            playSound('send');
             socket.emit('chat message', msgData);
 
             selectedReplyMsg = null;
@@ -468,14 +477,24 @@ window.closeMediaPreview = function() {
     if (previewVideo) previewVideo.pause();
 };
 
-// Render Messages & Swipe Balas
+// Render Messages & Highlighting Tag/Mention
 socket.on('chat message', (msg) => {
     renderMessage(msg);
     if (msg.userId !== currentUserId) {
-        playSound('receive'); // <-- Suara Pesan Masuk
+        playSound('receive');
     }
     showNotification(msg);
 });
+
+// Format Teks Mention (@nama & @everyone / @all)
+function formatMentions(text) {
+    if (!text) return '';
+    // Format highlight untuk @everyone / @all
+    let formatted = text.replace(/(@everyone|@all)/gi, '<span class="mention-tag mention-all">$1</span>');
+    // Format highlight untuk @nama
+    formatted = formatted.replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention-tag">@$1</span>');
+    return formatted;
+}
 
 function renderMessage(msg) {
     if (!messagesContainer) return;
@@ -511,14 +530,14 @@ function renderMessage(msg) {
     } else if (msg.type === 'audio') {
         contentHTML = `<audio src="${msg.fileUrl}" controls class="chat-vn" preload="metadata"></audio>`;
     } else {
-        contentHTML = `<p>${msg.text}</p>`;
+        contentHTML = `<p>${formatMentions(msg.text)}</p>`;
     }
 
     const deleteBtnHTML = `<span class="delete-icon" onclick="openDeleteModal('${msg.id}', '${msg.userId}')">&times;</span>`;
 
     msgDiv.innerHTML = `
         ${deleteBtnHTML}
-        <span class="msg-sender">${msg.sender}</span>
+        <span class="msg-sender" onclick="tagUserFromChat('${msg.sender}')" style="cursor: pointer;">${msg.sender}</span>
         ${replyHTML}
         ${contentHTML}
         <div class="msg-footer">
@@ -556,46 +575,4 @@ function renderMessage(msg) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Delete Modal Handling
-window.openDeleteModal = function(msgId, msgUserId) {
-    pendingDeleteMsgId = msgId;
-    if (deleteModal) deleteModal.style.display = 'flex';
-    if (btnDeleteForEveryone) {
-        btnDeleteForEveryone.style.display = (msgUserId === currentUserId) ? 'block' : 'none';
-    }
-};
-
-if (btnCancelDelete) {
-    btnCancelDelete.onclick = () => {
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    };
-}
-
-if (btnDeleteForMe) {
-    btnDeleteForMe.onclick = () => {
-        if (pendingDeleteMsgId) {
-            const el = document.getElementById(pendingDeleteMsgId);
-            if (el) el.remove();
-        }
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    };
-}
-
-if (btnDeleteForEveryone) {
-    btnDeleteForEveryone.onclick = () => {
-        if (pendingDeleteMsgId) {
-            socket.emit('delete-message-everyone', { msgId: pendingDeleteMsgId, userId: currentUserId });
-        }
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    };
-}
-
-socket.on('message-deleted-everyone', (data) => {
-    const el = document.getElementById(data.msgId);
-    if (el) {
-        el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
-    }
-});
+// Fungsi Klik N
