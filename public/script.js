@@ -124,7 +124,6 @@ socket.on('update-online-users', (users) => {
             <span class="online-name">${u.username || 'User'}</span>
             <span class="online-id-badge">ID: ${u.userId}</span>
         `;
-        // Klik pengguna online untuk langsung men-tag
         card.onclick = () => {
             if (messageInput) {
                 messageInput.value += `@${u.username} `;
@@ -217,7 +216,7 @@ socket.on('login-response', (res) => {
     }
 });
 
-// FUNGSI NOTIFIKASI PESAN DENGAN DETEKSI TAG / MENTION
+// FUNGSI NOTIFIKASI PESAN DENGAN DETEKSI MENTION
 function showNotification(msg) {
     if (!("Notification" in window)) return;
 
@@ -225,7 +224,6 @@ function showNotification(msg) {
         let title = `Pesan dari ${msg.sender}`;
         let bodyText = '';
 
-        // Deteksi apakah pengguna di-tag
         const isTagged = msg.text && (msg.text.includes(`@${currentUsername}`) || msg.text.includes('@everyone') || msg.text.includes('@all'));
         if (isTagged) {
             title = `🔔 Anda dimention oleh ${msg.sender}!`;
@@ -486,12 +484,9 @@ socket.on('chat message', (msg) => {
     showNotification(msg);
 });
 
-// Format Teks Mention (@nama & @everyone / @all)
 function formatMentions(text) {
     if (!text) return '';
-    // Format highlight untuk @everyone / @all
     let formatted = text.replace(/(@everyone|@all)/gi, '<span class="mention-tag mention-all">$1</span>');
-    // Format highlight untuk @nama
     formatted = formatted.replace(/@([a-zA-Z0-9_]+)/g, '<span class="mention-tag">@$1</span>');
     return formatted;
 }
@@ -575,4 +570,13 @@ function renderMessage(msg) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Fungsi Klik N
+window.tagUserFromChat = function(username) {
+    if (messageInput) {
+        messageInput.value += `@${username} `;
+        messageInput.focus();
+    }
+};
+
+// Delete Modal Handling
+window.openDeleteModal = function(msgId, msgUserId) {
+    pendingDelet
