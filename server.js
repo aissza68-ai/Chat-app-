@@ -8,6 +8,7 @@ const { exec } = require('child_process');
 
 const app = express();
 app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 const server = http.createServer(app);
 const io = new Server(server, {
     maxHttpBufferSize: 1e8,
