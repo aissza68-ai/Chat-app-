@@ -1,4 +1,6 @@
+// Inisialisasi Socket.IO dengan fallback transport agar stabil di Railway
 const socket = io({
+    transports: ['websocket', 'polling'],
     reconnection: true,
     reconnectionAttempts: Infinity,
     reconnectionDelay: 1000
@@ -15,7 +17,7 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Element UI
+// Ambil Element UI
 const loginScreen = document.getElementById('login-screen');
 const chatScreen = document.getElementById('chat-screen');
 const inputUserId = document.getElementById('input-user-id');
@@ -53,7 +55,7 @@ const videoInput = document.getElementById('video-input');
 const uploadProgress = document.getElementById('upload-progress');
 
 // -------------------------------------------------------------
-// FIX STATUS ONLINE ANGKA
+// STATUS ONLINE
 // -------------------------------------------------------------
 socket.on('update-online-count', (count) => {
     if (onlineCountEl) {
@@ -62,7 +64,7 @@ socket.on('update-online-count', (count) => {
 });
 
 // -------------------------------------------------------------
-// AUTO LOGIN & REGISTER
+// AUTO LOGIN & LOGIN HANDLER
 // -------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
     const savedUserId = localStorage.getItem('chat_userId');
@@ -138,7 +140,7 @@ socket.on('login-response', (res) => {
 });
 
 // -------------------------------------------------------------
-// REPLIES
+// BALAS PESAN / REPLIES
 // -------------------------------------------------------------
 if (cancelReplyBtn) {
     cancelReplyBtn.onclick = () => {
@@ -179,16 +181,10 @@ socket.on('display-typing', (data) => {
 });
 
 // -------------------------------------------------------------
-// SEND TEXT
+// KIRIM PESAN TEKS
 // -------------------------------------------------------------
-if (sendBtn) sendBtn.onclick = sendTextMessage;
-if (messageInput) {
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendTextMessage();
-    });
-}
-
 function sendTextMessage() {
+    if (!messageInput) return;
     const text = messageInput.value.trim();
     if (!text) return;
 
@@ -196,18 +192,32 @@ function sendTextMessage() {
         id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
         type: 'text',
         text: text,
-        sender: currentUsername,
+        sender: currentUsername || 'User',
         userId: currentUserId,
         replyTo: selectedReplyMsg,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
+    // Tampilkan langsung di browser pengirim
+    renderMessage(msgData);
+
+    // Kirim ke server
     socket.emit('chat message', msgData);
 
     messageInput.value = '';
     selectedReplyMsg = null;
     if (replyPreview) replyPreview.style.display = 'none';
     socket.emit('typing', { username: currentUsername, isTyping: false });
+}
+
+if (sendBtn) sendBtn.onclick = sendTextMessage;
+if (messageInput) {
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendTextMessage();
+        }
+    });
 }
 
 // -------------------------------------------------------------
@@ -322,11 +332,13 @@ function uploadFileWithProgress(file, type) {
                 id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
                 type: type,
                 fileUrl: data.fileUrl,
-                sender: currentUsername,
+                sender: currentUsername || 'User',
                 userId: currentUserId,
                 replyTo: selectedReplyMsg,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
+
+            renderMessage(msgData);
             socket.emit('chat message', msgData);
 
             selectedReplyMsg = null;
@@ -342,7 +354,7 @@ function uploadFileWithProgress(file, type) {
 }
 
 // -------------------------------------------------------------
-// RENDER MESSAGES & SWIPE BALAS
+// Menerima Pesan dari Server
 // -------------------------------------------------------------
 socket.on('chat message', (msg) => {
     renderMessage(msg);
@@ -428,7 +440,7 @@ function renderMessage(msg) {
 }
 
 // -------------------------------------------------------------
-// DELETE MESSAGES
+// HAPUS PESAN
 // -------------------------------------------------------------
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
@@ -473,4 +485,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-        
+                                                                          
