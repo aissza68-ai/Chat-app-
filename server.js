@@ -47,12 +47,16 @@ io.on('connection', (socket) => {
     });
 
     socket.on('user-login', ({ userId, password, name }) => {
+        if (!userId || !password) {
+            return socket.emit('login-response', { success: false, message: 'ID dan Password wajib diisi!' });
+        }
+
         if (usersDb[userId]) {
             if (usersDb[userId].password !== password) {
                 return socket.emit('login-response', { success: false, message: 'Password salah!' });
             }
         } else {
-            usersDb[userId] = { password, username: name || `User ${userId}` };
+            usersDb[userId] = { password, username: name && name.trim() !== '' ? name.trim() : `User ${userId}` };
         }
 
         const username = usersDb[userId].username;
