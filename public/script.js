@@ -1,10 +1,53 @@
-// ==========================================================================
-// SCRIPT.JS - HANYA FUNGSI CHAT & PENGAMAN SWIPE (LOGIN DIHANDLE HTML ASLI)
-// ==========================================================================
+// ==========================================
+// FULL SCRIPT.JS - SESUAI STRUKTUR HTML ANDA
+// ==========================================
 
-// Fungsi Render Pesan ke Layar Chat
+let currentUser = null;
+let replyingToMessage = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Menangani proses submit form login sesuai HTML Anda
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const userId = document.getElementById('input-user-id').value.trim();
+            const userName = document.getElementById('input-name').value.trim();
+
+            if (!userId) {
+                alert("ID Pengguna harus diisi!");
+                return;
+            }
+
+            currentUser = {
+                id: userId,
+                name: userName || userId
+            };
+
+            // Sembunyikan layar login, tampilkan layar chat
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('chat-screen').style.display = 'flex';
+
+            // Set nama di header chat
+            document.getElementById('header-user-name').textContent = currentUser.name;
+            document.getElementById('header-user-id').textContent = "ID: " + currentUser.id;
+        });
+    }
+
+    // Tombol pembatalan reply
+    const cancelReplyBtn = document.getElementById('cancel-reply');
+    if (cancelReplyBtn) {
+        cancelReplyBtn.addEventListener('click', () => {
+            replyingToMessage = null;
+            document.getElementById('reply-preview').style.display = 'none';
+        });
+    }
+});
+
+// Fungsi Render Pesan (Menggunakan ID #messages yang sesuai dengan HTML Anda)
 function renderMessages(messagesArray) {
-    const container = document.getElementById('messages-container');
+    const container = document.getElementById('messages');
     if (!container) return;
     
     container.innerHTML = '';
@@ -13,8 +56,7 @@ function renderMessages(messagesArray) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         
-        // Tentukan apakah pesan dikirim oleh user sendiri atau orang lain
-        const isSelf = typeof currentUser !== 'undefined' && currentUser && msg.senderId === currentUser.id;
+        const isSelf = currentUser && msg.senderId === currentUser.id;
         messageDiv.classList.add(isSelf ? 'self' : 'other');
 
         // Pengecekan mutlak status pesan terhapus
@@ -83,12 +125,12 @@ function attachSwipeListener(element, messageData) {
         // Jika digeser ke kanan sejauh lebih dari 60px
         if (diffX > 60) {
             if (!messageData.isDeleted && messageData.text !== "Pesan ini telah dihapus") {
-                // Panggil fungsi pratinjau balasan yang sudah ada di project Anda
-                if (typeof showReplyPreview === 'function') {
-                    showReplyPreview(messageData);
-                } else if (typeof triggerReplyPreview === 'function') {
-                    triggerReplyPreview(messageData);
-                }
+                replyingToMessage = messageData;
+                
+                // Tampilkan preview reply sesuai elemen HTML Anda
+                document.getElementById('reply-name').textContent = messageData.senderName;
+                document.getElementById('reply-text').textContent = messageData.text;
+                document.getElementById('reply-preview').style.display = 'flex';
             }
         }
         
