@@ -240,8 +240,10 @@ function stopRecording(send) {
 
     mediaRecorder.onstop = () => {
         if (send && audioChunks.length > 0) {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            const audioFile = new File([audioBlob], `vn-${Date.now()}.webm`, { type: 'audio/webm' });
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+const audioFile = new File([audioBlob], `vn-${Date.now()}.mp3`, { type: 'audio/mp3' });
+            
+                
             uploadFileWithProgress(audioFile, 'audio');
         }
         audioChunks = [];
