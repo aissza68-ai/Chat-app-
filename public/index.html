@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <!-- LOGIN SCREEN -->
+    <!-- SCREEN LOGIN -->
     <div id="login-screen">
         <div class="login-box glass">
             <h2>Masuk Obrolan</h2>
@@ -31,17 +31,17 @@
         </div>
     </div>
 
-    <!-- CHAT SCREEN -->
+    <!-- SCREEN CHAT -->
     <div id="chat-screen" style="display: none;">
         <header class="glass-header">
-            <div class="header-info">
-                <div class="user-profile">
+            <div class="header-card glass">
+                <div class="user-info-group">
                     <h3 id="header-user-name">Pengguna</h3>
                     <span id="header-user-id" class="user-badge">ID: -</span>
                 </div>
                 <div class="status-badge">
                     <span class="status-dot"></span>
-                    Online: <span id="online-count">1</span>
+                    <small>Online: <span id="online-count">1</span></small>
                 </div>
             </div>
         </header>
@@ -49,9 +49,16 @@
         <div id="messages"></div>
 
         <div id="typing-indicator" class="glass-pill" style="display: none;"></div>
-        <div id="upload-progress" class="glass-pill" style="display: none;">Mengunggah...</div>
 
-        <!-- REPLIES PREVIEW -->
+        <!-- OVERLAY LOADING UPLOAD GLASS -->
+        <div id="upload-overlay" class="upload-modal" style="display: none;">
+            <div class="upload-card glass">
+                <div class="spinner"></div>
+                <span id="upload-status-text">Mengunggah media...</span>
+            </div>
+        </div>
+
+        <!-- PRATINJAU BALAS PESAN -->
         <div id="reply-preview" class="glass-bar" style="display: none;">
             <div class="reply-info">
                 <small>Membalas <strong id="reply-name"></strong></small>
@@ -60,7 +67,7 @@
             <button type="button" id="cancel-reply">&times;</button>
         </div>
 
-        <!-- RECORDING BOX -->
+        <!-- KOTAK REKAMAN VN -->
         <div id="recording-box" class="glass-bar rec-active" style="display: none;">
             <div class="rec-info">
                 <span class="rec-dot"></span>
@@ -72,7 +79,7 @@
             </div>
         </div>
 
-        <!-- FOOTER / INPUT CONTROLS -->
+        <!-- FOOTER / INPUT CHAT -->
         <footer class="glass-footer">
             <div class="input-controls">
                 <button type="button" class="icon-btn" id="image-btn" title="Kirim Gambar">📷</button>
@@ -95,6 +102,15 @@
             <button type="button" id="btn-delete-forme">Hapus untuk Saya</button>
             <button type="button" id="btn-delete-foreveryone" class="btn-danger">Hapus untuk Semua Orang</button>
             <button type="button" id="btn-cancel-delete" class="btn-secondary">Batal</button>
+        </div>
+    </div>
+
+    <!-- MODAL PENINJAUAN (MEDIA PREVIEW LIGHTBOX) -->
+    <div id="media-preview-modal" class="modal" style="display: none;" onclick="closeMediaPreview()">
+        <span class="close-preview">&times;</span>
+        <div class="preview-content-box" onclick="event.stopPropagation()">
+            <img id="preview-image" src="" style="display: none;" />
+            <video id="preview-video" src="" controls style="display: none;"></video>
         </div>
     </div>
 
