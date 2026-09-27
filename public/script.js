@@ -158,8 +158,8 @@ function handleMediaUpload(file, type) {
             id: 'msg_' + Date.now(),
             senderId: currentUser ? currentUser.id : 'unknown',
             senderName: currentUser ? currentUser.name : 'User',
-            text: e.target.result, // Data URL file
-            type: type, // 'image' atau 'video'
+            text: e.target.result,
+            type: type,
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             replyTo: replyingToMessage ? replyingToMessage.id : null,
             isDeleted: false
@@ -210,7 +210,6 @@ function renderMessages(messagesArray) {
             `;
             // CATATAN MUTLAK: Pesan yang sudah dihapus SENGAJA TIDAK DIBERI event swipe sama sekali!
         } else {
-            // Render konten berdasarkan tipe pesan (teks, gambar, atau video)
             let contentHtml = '';
             if (msg.type === 'image') {
                 contentHtml = `<img src="${msg.text}" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="openMediaPreview('${msg.text}', 'image')" />`;
@@ -345,5 +344,4 @@ function escapeHtml(text) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-                   }
-                          
+}
