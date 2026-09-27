@@ -139,14 +139,14 @@ window.addEventListener('DOMContentLoaded', () => {
     const savedUserId = localStorage.getItem('chat_userId');
     const savedPassword = localStorage.getItem('chat_password');
     if (savedUserId && savedPassword) {
-        socket.emit('user-login', { userId: savedUserId, password: savedPassword });
+        socket.emit('user-login', { userId: savedUserId, password: savedPassword, name: '' });
     }
 });
 
 if (inputUserId) {
     inputUserId.addEventListener('input', () => {
         const val = inputUserId.value.trim();
-        if (val.length >= 4) {
+        if (val.length > 0) {
             socket.emit('check-user-id', val);
         } else {
             if (nameGroup) nameGroup.style.display = 'block';
@@ -216,7 +216,7 @@ socket.on('login-response', (res) => {
     }
 });
 
-// FUNGSI NOTIFIKASI PESAN DENGAN DETEKSI MENTION
+// NOTIFIKASI PESAN DENGAN DETEKSI MENTION
 function showNotification(msg) {
     if (!("Notification" in window)) return;
 
@@ -579,4 +579,4 @@ window.tagUserFromChat = function(username) {
 
 // Delete Modal Handling
 window.openDeleteModal = function(msgId, msgUserId) {
-    pendingDelet
+    pendingDel
