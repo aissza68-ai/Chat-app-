@@ -1,70 +1,109 @@
-// Contoh cuplikan penanganan login di server.js (Node.js / Express / Socket.io)
+// ==========================================================================
+// SCRIPT.JS - HANYA FUNGSI CHAT & PENGAMAN SWIPE (LOGIN DIHANDLE HTML ASLI)
+// ==========================================================================
 
-const fs = require('fs');
-const path = require('path');
+// Fungsi Render Pesan ke Layar Chat
+function renderMessages(messagesArray) {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
+    
+    container.innerHTML = '';
 
-// File database sederhana (misal menggunakan JSON)
-const DB_FILE = path.join(__dirname, 'users.json');
+    messagesArray.forEach((msg) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Tentukan apakah pesan dikirim oleh user sendiri atau orang lain
+        const isSelf = typeof currentUser !== 'undefined' && currentUser && msg.senderId === currentUser.id;
+        messageDiv.classList.add(isSelf ? 'self' : 'other');
 
-function readUsers() {
-    if (!fs.existsSync(DB_FILE)) return [];
-    try {
-        const data = fs.readFileSync(DB_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch (e) {
-        return [];
-    }
-}
+        // Pengecekan mutlak status pesan terhapus
+        const isDeleted = msg.isDeleted || msg.text === "Pesan ini telah dihapus";
 
-function saveUsers(users) {
-    fs.writeFileSync(DB_FILE, JSON.stringify(users, null, 2));
-}
-
-io.on('connection', (socket) => {
-    console.log('User terhubung:', socket.id);
-
-    // Cek apakah ID sudah terdaftar (untuk mengubah teks tombol jadi "Masuk" atau "Daftar Baru")
-    socket.on('check-user-id', (userId) => {
-        const users = readUsers();
-        const user = users.find(u => u.userId === userId);
-        socket.emit('check-user-id-result', { exists: !!user });
-    });
-
-    // Proses Login / Pendaftaran
-    socket.on('user-login', (data) => {
-        let { userId, password, name } = data;
-        if (!userId || !password) {
-            return socket.emit('login-response', { success: false, message: 'ID dan Password wajib diisi!' });
-        }
-
-        let users = readUsers();
-        let user = users.find(u => u.userId === userId);
-
-        if (user) {
-            // User sudah ada, verifikasi password
-            if (user.password === password) {
-                socket.emit('login-response', { 
-                    success: true, 
-                    userId: user.userId, 
-                    username: user.name || user.userId,
-                    history: globalChatHistory || [] 
-                });
-            } else {
-                socket.emit('login-response', { success: false, message: 'Password salah!' });
-            }
+        if (isDeleted) {
+            messageDiv.classList.add('deleted-message');
+            messageDiv.innerHTML = `
+                <div class="msg-content" style="font-style: italic; opacity: 0.7;">
+                    Pesan ini telah dihapus
+                </div>
+            `;
+            // CATATAN: Pesan yang sudah dihapus SENGAJA TIDAK DIBERI event swipe sama sekali!
         } else {
-            // User belum ada, daftarkan baru secara otomatis
-            const newName = name ? name : userId;
-            const newUser = { userId, password, name: newName };
-            users.push(newUser);
-            saveUsers(users);
+            messageDiv.innerHTML = `
+                <span class="msg-sender">${escapeHtml(msg.senderName || '')}</span>
+                <div class="msg-text">${escapeHtml(msg.text)}</div>
+                <div class="msg-footer">
+                    <span class="msg-time">${escapeHtml(msg.time || '')}</span>
+                </div>
+            `;
 
-            socket.emit('login-response', { 
-                success: true, 
-                userId: newUser.userId, 
-                username: newUser.name,
-                history: globalChatHistory || [] 
-            });
+            // Pasang event geser (swipe-to-reply) HANYA PADA PESAN YANG AKTIF
+            attachSwipeListener(messageDiv, msg);
         }
+
+        container.appendChild(messageDiv);
     });
-});
+
+    container.scrollTop = container.scrollHeight;
+}
+
+// Fungsi Gestur Geser (Swipe) untuk Balas Pesan dengan Validasi Ketat
+function attachSwipeListener(element, messageData) {
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    element.addEventListener('touchstart', (e) => {
+        // Validasi keamanan: Tolak sentuhan swipe jika pesan sudah dihapus
+        if (messageData.isDeleted || messageData.text === "Pesan ini telah dihapus") {
+            return;
+        }
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+    }, { passive: true });
+
+    element.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        let diffX = currentX - startX;
+
+        // Berikan efek geser visual ringan ke kanan (maksimal 100px)
+        if (diffX > 0 && diffX < 100) {
+            element.style.transform = `translateX(${diffX}px)`;
+        }
+    }, { passive: true });
+
+    element.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        
+        let diffX = currentX - startX;
+        element.style.transform = 'translateX(0px)';
+
+        // Jika digeser ke kanan sejauh lebih dari 60px
+        if (diffX > 60) {
+            if (!messageData.isDeleted && messageData.text !== "Pesan ini telah dihapus") {
+                // Panggil fungsi pratinjau balasan yang sudah ada di project Anda
+                if (typeof showReplyPreview === 'function') {
+                    showReplyPreview(messageData);
+                } else if (typeof triggerReplyPreview === 'function') {
+                    triggerReplyPreview(messageData);
+                }
+            }
+        }
+        
+        startX = 0;
+        currentX = 0;
+    });
+}
+
+// Fungsi Keamanan Mencegah XSS Injection
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
