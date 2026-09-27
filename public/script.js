@@ -62,6 +62,56 @@ const mediaPreviewModal = document.getElementById('media-preview-modal');
 const previewImage = document.getElementById('preview-image');
 const previewVideo = document.getElementById('preview-video');
 
+// ==========================================
+// EFEK SUARA (WEB AUDIO API GENERATOR)
+// ==========================================
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playSound(type) {
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+
+    if (type === 'send') {
+        // Suara Pop Singkat saat Kirim
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+
+    } else if (type === 'receive') {
+        // Suara Ding-Ding saat Ada Pesan Masuk
+        const now = audioCtx.currentTime;
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        osc1.frequency.setValueAtTime(800, now);
+        osc2.frequency.setValueAtTime(1050, now + 0.08);
+
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc1.start(now);
+        osc1.stop(now + 0.08);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.3);
+    }
+}
+
 // UPDATE DAFTAR PENGGUNA ONLINE
 socket.on('update-online-users', (users) => {
     if (onlineCountEl) onlineCountEl.innerText = users.length;
@@ -119,6 +169,9 @@ function executeLogin(e) {
 
     if (!userId) return alert('Silakan isi ID Pengguna!');
     if (!password) return alert('Silakan isi Password!');
+
+    // Aktifkan Audio Context saat klik user
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
     socket.emit('user-login', { userId, password, name });
 }
@@ -240,6 +293,7 @@ function sendTextMessage() {
     };
 
     renderMessage(msgData);
+    playSound('send'); // <-- Suara Kirim
     socket.emit('chat message', msgData);
 
     messageInput.value = '';
@@ -377,6 +431,7 @@ function uploadFileWithProgress(file, typeName) {
             };
 
             renderMessage(msgData);
+            playSound('send'); // <-- Suara Kirim Media
             socket.emit('chat message', msgData);
 
             selectedReplyMsg = null;
@@ -416,7 +471,10 @@ window.closeMediaPreview = function() {
 // Render Messages & Swipe Balas
 socket.on('chat message', (msg) => {
     renderMessage(msg);
-    showNotification(msg); // <-- PANGGIL NOTIFIKASI
+    if (msg.userId !== currentUserId) {
+        playSound('receive'); // <-- Suara Pesan Masuk
+    }
+    showNotification(msg);
 });
 
 function renderMessage(msg) {
@@ -541,4 +599,3 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-            
