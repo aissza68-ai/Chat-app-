@@ -15,7 +15,7 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Ambil Elemen UI
+// Element UI
 const loginScreen = document.getElementById('login-screen');
 const chatScreen = document.getElementById('chat-screen');
 const inputUserId = document.getElementById('input-user-id');
@@ -24,7 +24,7 @@ const inputName = document.getElementById('input-name');
 const nameGroup = document.getElementById('name-group');
 const btnLogin = document.getElementById('btn-login');
 
-const onlineCountEl = document.getElementById('online-count') || document.querySelector('.online-status');
+const onlineCountEl = document.getElementById('online-count');
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
@@ -53,17 +53,16 @@ const videoInput = document.getElementById('video-input');
 const uploadProgress = document.getElementById('upload-progress');
 
 // -------------------------------------------------------------
-// FIX STATUS ONLINE (TIDAK DOUBLE)
+// FIX STATUS ONLINE ANGKA
 // -------------------------------------------------------------
 socket.on('update-online-count', (count) => {
     if (onlineCountEl) {
-        // Hanya menampilkan angka agar tidak "Online: Online: 1"
-        onlineCountEl.innerText = count; 
+        onlineCountEl.innerText = count;
     }
 });
 
 // -------------------------------------------------------------
-// AUTO LOGIN & REGISTRASI
+// AUTO LOGIN & REGISTER
 // -------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
     const savedUserId = localStorage.getItem('chat_userId');
@@ -109,7 +108,8 @@ function executeLogin(e) {
 }
 
 if (btnLogin) btnLogin.onclick = executeLogin;
-document.querySelectorAll('form').forEach(f => f.onsubmit = executeLogin);
+const loginForm = document.getElementById('login-form');
+if (loginForm) loginForm.onsubmit = executeLogin;
 
 socket.on('login-response', (res) => {
     if (res.success) {
@@ -138,7 +138,7 @@ socket.on('login-response', (res) => {
 });
 
 // -------------------------------------------------------------
-// BALAS PESAN (REPLY)
+// REPLIES
 // -------------------------------------------------------------
 if (cancelReplyBtn) {
     cancelReplyBtn.onclick = () => {
@@ -156,7 +156,7 @@ function setReplyMessage(msgData) {
 }
 
 // -------------------------------------------------------------
-// ANIMASI SEDANG MENGETIK
+// TYPING INDICATOR
 // -------------------------------------------------------------
 if (messageInput) {
     messageInput.addEventListener('input', () => {
@@ -179,7 +179,7 @@ socket.on('display-typing', (data) => {
 });
 
 // -------------------------------------------------------------
-// KIRIM PESAN TEKS
+// SEND TEXT
 // -------------------------------------------------------------
 if (sendBtn) sendBtn.onclick = sendTextMessage;
 if (messageInput) {
@@ -211,7 +211,7 @@ function sendTextMessage() {
 }
 
 // -------------------------------------------------------------
-// REKAM & KIRIM VOICE NOTE (VN)
+// REKAM & KIRIM VN
 // -------------------------------------------------------------
 if (vnBtn) {
     vnBtn.onclick = async () => {
@@ -246,7 +246,7 @@ if (vnBtn) {
             }, 1000);
 
         } catch (err) {
-            alert('Izin penggunaan mikrofon ditolak.');
+            alert('Izin mikrofon ditolak.');
         }
     };
 }
@@ -280,7 +280,7 @@ function stopRecording(send) {
 }
 
 // -------------------------------------------------------------
-// UPLOAD FOTO & VIDEO (DENGAN PROSES INDIKATOR)
+// UPLOAD FOTO & VIDEO
 // -------------------------------------------------------------
 if (imageBtn) imageBtn.onclick = () => imageInput.click();
 if (imageInput) {
@@ -305,7 +305,7 @@ function uploadFileWithProgress(file, type) {
     formData.append('file', file);
 
     if (uploadProgress) {
-        uploadProgress.innerText = `Mengirim ${type}...`;
+        uploadProgress.innerText = `Mengunggah ${type}...`;
         uploadProgress.style.display = 'block';
     }
 
@@ -337,12 +337,12 @@ function uploadFileWithProgress(file, type) {
     })
     .catch(err => {
         if (uploadProgress) uploadProgress.style.display = 'none';
-        alert('Terjadi kesalahan koneksi saat mengunggah.');
+        alert('Terjadi kesalahan koneksi.');
     });
 }
 
 // -------------------------------------------------------------
-// RENDER PESAN & SWIPE BALAS PESAN
+// RENDER MESSAGES & SWIPE BALAS
 // -------------------------------------------------------------
 socket.on('chat message', (msg) => {
     renderMessage(msg);
@@ -397,7 +397,7 @@ function renderMessage(msg) {
         </div>
     `;
 
-    // FITUR SWIPE TO REPLY (Geser pesan ke kanan untuk membalas)
+    // FITUR SWIPE BALAS PESAN
     let startX = 0;
     let currentX = 0;
 
@@ -428,7 +428,7 @@ function renderMessage(msg) {
 }
 
 // -------------------------------------------------------------
-// HAPUS PESAN
+// DELETE MESSAGES
 // -------------------------------------------------------------
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
