@@ -3,113 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Chat Modern</title>
+    <title>WhatsApp Web Clone - Grup</title>
     <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- SCREEN LOGIN -->
-    <div id="login-screen" class="screen">
-        <div class="login-card">
-            <h2>Selamat Datang</h2>
-            <p>Masukkan ID Pengguna dan Password Anda</p>
-            <form id="login-form">
-                <div class="input-group">
-                    <input type="text" id="input-user-id" placeholder="ID Pengguna (Contoh: budi123)" required autocomplete="off">
+    <div class="whatsapp-container">
+        <!-- Sidebar Kiri (Daftar Chat) -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="user-profile">
+                    <img src="https://i.pravatar.cc/150?img=12" alt="Profil">
                 </div>
-                <div class="input-group">
-                    <input type="password" id="input-password" placeholder="Password" required>
+                <div class="sidebar-icons">
+                    <i class="fa-solid fa-users" title="Komunitas"></i>
+                    <i class="fa-solid fa-circle-notch" title="Status"></i>
+                    <i class="fa-solid fa-message" title="Chat Baru"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" title="Menu"></i>
                 </div>
-                <div class="input-group">
-                    <input type="text" id="input-name" placeholder="Nama Lengkap / Panggilan (Jika baru)" autocomplete="off">
-                </div>
-                <button type="submit" id="btn-login" class="primary-btn">Masuk / Daftar</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- SCREEN CHAT -->
-    <div id="chat-screen" class="screen" style="display: none;">
-        <div class="chat-container">
-            <!-- Sidebar Online Users -->
-            <div class="sidebar">
-                <h3>Pengguna Online (<span id="online-count">0</span>)</h3>
-                <div id="online-users-list" class="online-users-list"></div>
             </div>
 
-            <!-- Main Chat Area -->
-            <div class="chat-main">
-                <div class="chat-header">
-                    <div>
-                        <h3 id="header-user-name">Nama</h3>
-                        <small id="header-user-id">ID: -</small>
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="search-input" placeholder="Cari atau mulai chat baru">
+                </div>
+                <i class="fa-solid fa-filter"></i>
+            </div>
+
+            <div class="chat-list">
+                <!-- Item Grup -->
+                <div class="chat-item active" onclick="switchChat('Grup Developer AI')">
+                    <div class="chat-avatar">
+                        <img src="https://i.pravatar.cc/150?img=68" alt="Grup">
                     </div>
-                    <div id="typing-indicator" class="typing-indicator" style="display: none;"></div>
-                </div>
-
-                <div id="messages" class="messages-container"></div>
-
-                <!-- Preview Reply / Swipe to Reply -->
-                <div id="reply-preview" class="reply-preview" style="display: none;">
-                    <div class="reply-preview-content">
-                        <strong id="reply-name"></strong>
-                        <p id="reply-text"></p>
+                    <div class="chat-info">
+                        <div class="chat-title-time">
+                            <h4>Grup Developer AI</h4>
+                            <span class="time" id="last-time">18:40</span>
+                        </div>
+                        <div class="chat-last-msg">
+                            <p id="preview-msg">Keren banget animasinya!</p>
+                            <span class="badge" id="unread-badge" style="display:none;">1</span>
+                        </div>
                     </div>
-                    <button id="cancel-reply" class="tool-btn">&times;</button>
                 </div>
-
-                <!-- Recording VN Box -->
-                <div id="recording-box" class="recording-box" style="display: none;">
-                    <span class="rec-dot"></span>
-                    <span id="rec-timer">00:00</span>
-                    <button id="cancel-rec-btn" class="icon-btn-danger">Batal</button>
-                    <button id="stop-send-rec-btn" class="icon-btn-success">Kirim VN</button>
-                </div>
-
-                <!-- Input Chat -->
-                <div class="chat-input-area">
-                    <button id="image-btn" class="tool-btn" title="Kirim Gambar">📷</button>
-                    <input type="file" id="image-input" accept="image/*" style="display: none;">
-
-                    <button id="video-btn" class="tool-btn" title="Kirim Video">🎥</button>
-                    <input type="file" id="video-input" accept="video/*" style="display: none;">
-
-                    <button id="vn-btn" class="tool-btn" title="Voice Note">🎙️</button>
-
-                    <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off">
-                    <button id="send-btn" class="primary-btn">Kirim</button>
+                <!-- Chat Pribadi Contoh -->
+                <div class="chat-item" onclick="alert('Fitur chat pribadi belum dipilih, silakan pilih Grup Developer AI!')">
+                    <div class="chat-avatar">
+                        <img src="https://i.pravatar.cc/150?img=32" alt="User">
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-title-time">
+                            <h4>Budi Santoso</h4>
+                            <span class="time">Kemarin</span>
+                        </div>
+                        <div class="chat-last-msg">
+                            <p>Oke, nanti saya kabari lagi ya.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- MODAL DELETE -->
-    <div id="delete-modal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <p>Hapus pesan ini?</p>
-            <button id="btn-delete-forme" class="secondary-btn">Hapus untuk Saya</button>
-            <button id="btn-delete-foreveryone" class="danger-btn" style="display: none;">Hapus untuk Semua</button>
-            <button id="btn-cancel-delete" class="primary-btn">Batal</button>
+        <!-- Area Utama Chat (Kanan) -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="active-profile" onclick="toggleGroupInfo()">
+                    <img src="https://i.pravatar.cc/150?img=68" alt="Grup Avatar">
+                    <div class="active-info">
+                        <h3>Grup Developer AI</h3>
+                        <p id="group-members-desc">Andi, Budi, Sinta, Siti, Anda</p>
+                    </div>
+                </div>
+                <div class="header-icons">
+                    <i class="fa-solid fa-video" title="Video Call"></i>
+                    <i class="fa-solid fa-phone" title="Panggilan Suara"></i>
+                    <i class="fa-solid fa-magnifying-glass" title="Cari Pesan"></i>
+                    <i class="fa-solid fa-ellipsis-vertical" title="Menu Lainnya" onclick="toggleGroupInfo()"></i>
+                </div>
+            </div>
+
+            <!-- Ruang Pesan / Chat Messages -->
+            <div class="messages-container" id="messages-container">
+                <div class="encryption-notice">
+                    <i class="fa-solid fa-lock"></i> Pesan dan panggilan bersifat end-to-end encryption. Tidak seorang pun di luar chat ini, bahkan WhatsApp, dapat membaca atau mendengarkannya.
+                </div>
+
+                <!-- Contoh Pesan Masuk -->
+                <div class="message incoming">
+                    <div class="message-content">
+                        <span class="sender-name">Andi Developer</span>
+                        <p>Halo semuanya! Selamat datang di grup web chat baru kita.</p>
+                        <span class="msg-time">18:35</span>
+                    </div>
+                </div>
+
+                <div class="message incoming">
+                    <div class="message-content">
+                        <span class="sender-name">Sinta UI</span>
+                        <p>Mantap! Tampilan dan animasinya udah mirip aslinya nih 🔥</p>
+                        <span class="msg-time">18:37</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indikator Sedang Mengetik -->
+            <div class="typing-indicator" id="typing-indicator" style="display: none;">
+                <span></span><span></span><span></span> <i>Siti sedang mengetik...</i>
+            </div>
+
+            <!-- Footer / Input Chat -->
+            <div class="chat-footer">
+                <div class="footer-icons">
+                    <i class="fa-regular fa-face-smile" title="Emoji"></i>
+                    <i class="fa-solid fa-paperclip" title="Lampirkan" onclick="sendAttachment()"></i>
+                </div>
+                <div class="message-input-box">
+                    <input type="text" id="message-input" placeholder="Ketik pesan..." onkeypress="handleKeyPress(event)">
+                </div>
+                <div class="footer-send" onclick="sendMessage()">
+                    <i class="fa-solid fa-paper-plane" id="send-icon"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- MODAL MEDIA PREVIEW -->
-    <div id="media-preview-modal" class="modal" style="display: none;" onclick="closeMediaPreview()">
-        <div class="modal-media-content" onclick="event.stopPropagation()">
-            <span class="close-modal" onclick="closeMediaPreview()">&times;</span>
-            <img id="preview-image" style="display: none; max-width: 100%; max-height: 80vh;" />
-            <video id="preview-video" controls style="display: none; max-width: 100%; max-height: 80vh;"></video>
-        </div>
-    </div>
-
-    <!-- OVERLAY UPLOAD -->
-    <div id="upload-overlay" class="modal" style="display: none;">
-        <div class="modal-content">
-            <p id="upload-status-text">Mengunggah file...</p>
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
