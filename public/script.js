@@ -1,5 +1,5 @@
 /* ==========================================================================
-   FULL SCRIPT.JS - LENGKAP SEUTUHNYA (LOGIN, SOCKET, CHAT, & PENGAMAN SWIPE)
+   FULL SCRIPT.JS - LENGKAP SEUTUHNYA (LOGIN, SOCKET, CHAT, MEDIA, & SWIPE)
    ========================================================================== */
 
 const socket = io();
@@ -9,7 +9,7 @@ let replyingToMessage = null;
 let selectedMessageIdForDelete = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inisialisasi Form Login (Sesuai HTML lu)
+    // 1. Inisialisasi Form Login Sesuai HTML Lu
     const loginForm = document.getElementById('login-form');
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
@@ -55,7 +55,44 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 3. Tombol Batal Pratinjau Balasan (Reply)
+    // 3. Tombol Fitur Media (Foto, Video, VN)
+    const imageBtn = document.getElementById('image-btn');
+    const imageInput = document.getElementById('image-input');
+    if (imageBtn && imageInput) {
+        imageBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleMediaUpload(file, 'image');
+        });
+    }
+
+    const videoBtn = document.getElementById('video-btn');
+    const videoInput = document.getElementById('video-input');
+    if (videoBtn && videoInput) {
+        videoBtn.addEventListener('click', () => videoInput.click());
+        videoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleMediaUpload(file, 'video');
+        });
+    }
+
+    const vnBtn = document.getElementById('vn-btn');
+    if (vnBtn) {
+        vnBtn.addEventListener('click', () => {
+            const recordingBox = document.getElementById('recording-box');
+            if (recordingBox) {
+                recordingBox.style.display = recordingBox.style.display === 'none' ? 'flex' : 'none';
+            }
+        });
+    }
+
+    // Tombol pembatalan recording VN
+    document.getElementById('cancel-rec-btn')?.addEventListener('click', () => {
+        const recordingBox = document.getElementById('recording-box');
+        if (recordingBox) recordingBox.style.display = 'none';
+    });
+
+    // 4. Tombol Batal Pratinjau Balasan (Reply)
     const cancelReplyBtn = document.getElementById('cancel-reply');
     if (cancelReplyBtn) {
         cancelReplyBtn.addEventListener('click', () => {
@@ -65,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Modal Hapus Pesan (Delete Modal)
+    // 5. Modal Hapus Pesan (Delete Modal)
     document.getElementById('btn-cancel-delete')?.addEventListener('click', closeDeleteModal);
     
     document.getElementById('btn-delete-forme')?.addEventListener('click', () => {
@@ -83,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Fungsi Mengirim Pesan
+// Fungsi Mengirim Pesan Teks
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
     if (!messageInput) return;
@@ -96,19 +133,46 @@ function sendMessage() {
         senderId: currentUser ? currentUser.id : 'unknown',
         senderName: currentUser ? currentUser.name : 'User',
         text: text,
+        type: 'text',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         replyTo: replyingToMessage ? replyingToMessage.id : null,
         isDeleted: false
     };
 
-    // Kirim data pesan ke server via Socket.IO
     socket.emit('send_message', messageData);
 
-    // Kosongkan input dan hapus preview reply
     messageInput.value = '';
     replyingToMessage = null;
     const replyPreview = document.getElementById('reply-preview');
     if (replyPreview) replyPreview.style.display = 'none';
+}
+
+// Fungsi Menangani Upload Media (Foto/Video)
+function handleMediaUpload(file, type) {
+    const uploadOverlay = document.getElementById('upload-overlay');
+    if (uploadOverlay) uploadOverlay.style.display = 'flex';
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const mediaData = {
+            id: 'msg_' + Date.now(),
+            senderId: currentUser ? currentUser.id : 'unknown',
+            senderName: currentUser ? currentUser.name : 'User',
+            text: e.target.result, // Data URL file
+            type: type, // 'image' atau 'video'
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            replyTo: replyingToMessage ? replyingToMessage.id : null,
+            isDeleted: false
+        };
+
+        socket.emit('send_message', mediaData);
+
+        if (uploadOverlay) uploadOverlay.style.display = 'none';
+        replyingToMessage = null;
+        const replyPreview = document.getElementById('reply-preview');
+        if (replyPreview) replyPreview.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
 }
 
 // Socket.IO Menerima Pesan dari Server
@@ -146,9 +210,19 @@ function renderMessages(messagesArray) {
             `;
             // CATATAN MUTLAK: Pesan yang sudah dihapus SENGAJA TIDAK DIBERI event swipe sama sekali!
         } else {
+            // Render konten berdasarkan tipe pesan (teks, gambar, atau video)
+            let contentHtml = '';
+            if (msg.type === 'image') {
+                contentHtml = `<img src="${msg.text}" style="max-width: 200px; border-radius: 8px; cursor: pointer;" onclick="openMediaPreview('${msg.text}', 'image')" />`;
+            } else if (msg.type === 'video') {
+                contentHtml = `<video src="${msg.text}" style="max-width: 200px; border-radius: 8px;" controls></video>`;
+            } else {
+                contentHtml = `<div class="msg-text">${escapeHtml(msg.text)}</div>`;
+            }
+
             messageDiv.innerHTML = `
                 <span class="msg-sender">${escapeHtml(msg.senderName || '')}</span>
-                <div class="msg-text">${escapeHtml(msg.text)}</div>
+                ${contentHtml}
                 <div class="msg-footer">
                     <span class="msg-time">${escapeHtml(msg.time || '')}</span>
                 </div>
@@ -178,7 +252,6 @@ function attachSwipeListener(element, messageData) {
     let isSwiping = false;
 
     element.addEventListener('touchstart', (e) => {
-        // Validasi pengaman mutlak: Jika pesan sudah dihapus, batalkan proses swipe seketika!
         if (messageData.isDeleted || messageData.text === "Pesan ini telah dihapus") {
             return;
         }
@@ -191,7 +264,6 @@ function attachSwipeListener(element, messageData) {
         currentX = e.touches[0].clientX;
         let diffX = currentX - startX;
 
-        // Berikan efek geser visual ringan ke kanan (maksimal 100px)
         if (diffX > 0 && diffX < 100) {
             element.style.transform = `translateX(${diffX}px)`;
         }
@@ -204,7 +276,6 @@ function attachSwipeListener(element, messageData) {
         let diffX = currentX - startX;
         element.style.transform = 'translateX(0px)';
 
-        // Jika digeser ke kanan sejauh lebih dari 60px
         if (diffX > 60) {
             if (!messageData.isDeleted && messageData.text !== "Pesan ini telah dihapus") {
                 replyingToMessage = messageData;
@@ -214,7 +285,7 @@ function attachSwipeListener(element, messageData) {
                 const replyPreview = document.getElementById('reply-preview');
 
                 if (replyName) replyName.textContent = messageData.senderName;
-                if (replyText) replyText.textContent = messageData.text;
+                if (replyText) replyText.textContent = messageData.type === 'image' ? '[Foto]' : (messageData.type === 'video' ? '[Video]' : messageData.text);
                 if (replyPreview) replyPreview.style.display = 'flex';
             }
         }
@@ -246,6 +317,25 @@ function closeDeleteModal() {
     }
 }
 
+// Fungsi Pratinjau Media (Gambar/Video Modal)
+function openMediaPreview(src, type) {
+    const modal = document.getElementById('media-preview-modal');
+    const img = document.getElementById('preview-image');
+    const video = document.getElementById('preview-video');
+    
+    if (modal) modal.style.display = 'flex';
+    if (type === 'image' && img) {
+        img.src = src;
+        img.style.display = 'block';
+        if (video) video.style.display = 'none';
+    }
+}
+
+function closeMediaPreview() {
+    const modal = document.getElementById('media-preview-modal');
+    if (modal) modal.style.display = 'none';
+}
+
 // Fungsi Keamanan Mencegah XSS Injection
 function escapeHtml(text) {
     if (!text) return '';
@@ -255,4 +345,5 @@ function escapeHtml(text) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
-           }
+                   }
+                          
