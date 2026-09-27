@@ -171,6 +171,7 @@ body, html {
     height: 100%;
     background: rgba(255, 255, 255, 0.03) !important;
     min-width: 0;
+    position: relative;
 }
 
 .chat-header {
@@ -191,21 +192,24 @@ body, html {
     color: rgba(255, 255, 255, 0.7);
 }
 
-/* Indikator Mengetik di dalam Kotak Kecil Transparan (Glassmorphism) */
+/* INDIKATOR MENGETIK: Dipindah ke atas area tombol kamera & input bagian bawah */
 .typing-indicator {
+    position: absolute;
+    bottom: 70px;
+    left: 15px;
     display: inline-flex;
     align-items: center;
     background: rgba(255, 255, 255, 0.15) !important;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.25);
-    padding: 4px 10px;
+    padding: 6px 12px;
     border-radius: 12px;
     font-style: italic;
     font-size: 11px;
     color: #00c6ff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    margin-left: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 50;
 }
 
 /* Messages Container */
@@ -282,6 +286,7 @@ body, html {
 
 /* Chat Input Area */
 .chat-input-area {
+    position: relative;
     padding: 10px 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
@@ -367,7 +372,7 @@ body, html {
     cursor: pointer;
 }
 
-/* Modal Popup Hapus Pesan yang Lebih Estetik & Modern */
+/* Modal Popup Hapus Pesan Modern */
 .modal {
     position: fixed;
     top: 0;
@@ -407,7 +412,6 @@ body, html {
     margin-bottom: 4px;
 }
 
-/* Perbaikan Tombol di dalam Modal Hapus Pesan agar Elegan & Seragam */
 .modal-content button, .modal-content input[type="button"], .modal-content input[type="submit"] {
     width: 100%;
     padding: 10px 14px;
@@ -425,7 +429,6 @@ body, html {
     background: rgba(255, 255, 255, 0.25) !important;
 }
 
-/* Tombol khusus Batal / Utama di Modal */
 .modal-content button.primary-btn, .modal-content .btn-danger {
     background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%) !important;
     border: none;
@@ -433,7 +436,7 @@ body, html {
     box-shadow: 0 4px 15px rgba(0, 114, 255, 0.3);
 }
 
-/* Khusus Tampilan Layar HP Supaya Sidebar Rapi di Atas */
+/* Responsif Tampilan HP */
 @media (max-width: 768px) {
     .chat-container {
         flex-direction: column !important;
@@ -447,10 +450,7 @@ body, html {
         gap: 8px;
     }
     .sidebar h3 {
-        font-size: 11px;
-        margin-bottom: 0 !important;
-        white-space: nowrap;
-        display: none; /* Disembunyikan agar hemat tempat di HP, fokus ke avatar/user online */
+        display: none;
     }
     .online-users-list {
         display: flex !important;
@@ -466,5 +466,5 @@ body, html {
         padding: 4px 6px !important;
         flex-shrink: 0;
     }
-    }
-    
+                                 }
+                           
