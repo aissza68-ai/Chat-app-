@@ -2,126 +2,118 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ruang Obrolan Modern</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Chatting Modern</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 
     <!-- SCREEN LOGIN -->
-    <div id="login-screen">
-        <div class="login-box glass">
-            <h2>Masuk Obrolan</h2>
+    <div id="login-screen" class="screen">
+        <div class="login-card">
+            <h2>Selamat Datang</h2>
+            <p>Masukkan ID Pengguna dan Password Anda</p>
             <form id="login-form">
-                <div class="form-group">
-                    <label>ID Pengguna</label>
-                    <input type="text" id="input-user-id" placeholder="Masukkan ID Pengguna" required>
+                <div class="input-group">
+                    <input type="text" id="input-user-id" placeholder="ID Pengguna (Contoh: budi123)" required autocomplete="off">
                 </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" id="input-password" placeholder="Masukkan Password" required>
+                <div class="input-group">
+                    <input type="password" id="input-password" placeholder="Password" required>
                 </div>
-                <div class="form-group" id="name-group">
-                    <label>Nama Lengkap / Panggilan</label>
-                    <input type="text" id="input-name" placeholder="Masukkan Nama Anda">
+                <div class="input-group" id="name-group">
+                    <input type="text" id="input-name" placeholder="Nama Lengkap / Panggilan (Jika baru)" autocomplete="off">
                 </div>
-                <button type="submit" id="btn-login">Masuk / Daftar</button>
+                <button type="submit" id="btn-login" class="primary-btn">Masuk / Daftar</button>
             </form>
         </div>
     </div>
 
     <!-- SCREEN CHAT -->
-    <div id="chat-screen" style="display: none;">
-        <header class="glass-header">
-            <div class="header-card glass">
-                <!-- User Info Lokal -->
-                <div class="user-info-group">
-                    <h3 id="header-user-name">Pengguna</h3>
-                    <span id="header-user-id" class="user-badge">ID: -</span>
-                </div>
-
-                <!-- DAFTAR PENGGUNA ONLINE (KOTAK-KOTAK GLASS) -->
-                <div class="online-users-container" id="online-users-list">
-                    <!-- Kotak pengguna online di-render dinamis -->
-                </div>
-
-                <!-- Status Counter -->
-                <div class="status-badge">
-                    <span class="status-dot"></span>
-                    <small>Online: <span id="online-count">0</span></small>
+    <div id="chat-screen" class="screen" style="display: none;">
+        <div class="chat-container">
+            <!-- Sidebar Online Users -->
+            <div class="sidebar">
+                <h3>Pengguna Online (<span id="online-count">0</span>)</h3>
+                <div id="online-users-list" class="online-users-list">
+                    <!-- Daftar user online muncul di sini -->
                 </div>
             </div>
-        </header>
 
-        <div id="messages"></div>
+            <!-- Main Chat Area -->
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div>
+                        <h3 id="header-user-name">Nama</h3>
+                        <small id="header-user-id">ID: -</small>
+                    </div>
+                    <div id="typing-indicator" class="typing-indicator" style="display: none;"></div>
+                </div>
 
-        <div id="typing-indicator" class="glass-pill" style="display: none;"></div>
+                <div id="messages" class="messages-container">
+                    <!-- Pesan chat muncul di sini -->
+                </div>
 
-        <!-- OVERLAY LOADING UPLOAD GLASS -->
-        <div id="upload-overlay" class="upload-modal" style="display: none;">
-            <div class="upload-card glass">
-                <div class="spinner"></div>
-                <span id="upload-status-text">Mengunggah media...</span>
+                <!-- Preview Reply -->
+                <div id="reply-preview" class="reply-preview" style="display: none;">
+                    <div class="reply-preview-content">
+                        <strong id="reply-name"></strong>
+                        <p id="reply-text"></p>
+                    </div>
+                    <button id="cancel-reply">&times;</button>
+                </div>
+
+                <!-- Recording VN Box -->
+                <div id="recording-box" class="recording-box" style="display: none;">
+                    <span class="rec-dot"></span>
+                    <span id="rec-timer">00:00</span>
+                    <button id="cancel-rec-btn" class="icon-btn-danger">Batal</button>
+                    <button id="stop-send-rec-btn" class="icon-btn-success">Kirim VN</button>
+                </div>
+
+                <!-- Input Chat -->
+                <div class="chat-input-area">
+                    <button id="image-btn" class="tool-btn" title="Kirim Gambar">📷</button>
+                    <input type="file" id="image-input" accept="image/*" style="display: none;">
+
+                    <button id="video-btn" class="tool-btn" title="Kirim Video">🎥</button>
+                    <input type="file" id="video-input" accept="video/*" style="display: none;">
+
+                    <button id="vn-btn" class="tool-btn" title="Voice Note">🎙️</button>
+
+                    <input type="text" id="message-input" placeholder="Ketik pesan atau @mention..." autocomplete="off">
+                    <button id="send-btn" class="primary-btn">Kirim</button>
+                </div>
             </div>
         </div>
-
-        <!-- PRATINJAU BALAS PESAN -->
-        <div id="reply-preview" class="glass-bar" style="display: none;">
-            <div class="reply-info">
-                <small>Membalas <strong id="reply-name"></strong></small>
-                <p id="reply-text"></p>
-            </div>
-            <button type="button" id="cancel-reply">&times;</button>
-        </div>
-
-        <!-- KOTAK REKAMAN VN -->
-        <div id="recording-box" class="glass-bar rec-active" style="display: none;">
-            <div class="rec-info">
-                <span class="rec-dot"></span>
-                <span id="rec-timer">00:00</span>
-            </div>
-            <div class="rec-actions">
-                <button type="button" id="cancel-rec-btn" class="btn-secondary">Batal</button>
-                <button type="button" id="stop-send-rec-btn" class="btn-primary">Kirim VN</button>
-            </div>
-        </div>
-
-        <!-- FOOTER INPUT CHAT -->
-        <footer class="glass-footer">
-            <div class="input-controls">
-                <button type="button" class="icon-btn" id="image-btn" title="Kirim Gambar">📷</button>
-                <button type="button" class="icon-btn" id="video-btn" title="Kirim Video">🎥</button>
-                <button type="button" class="icon-btn" id="vn-btn" title="Rekam Suara">🎙️</button>
-
-                <input type="file" id="image-input" accept="image/*" style="display: none;">
-                <input type="file" id="video-input" accept="video/*" style="display: none;">
-
-                <input type="text" id="message-input" placeholder="Ketik pesan..." autocomplete="off">
-                <button type="button" id="send-btn">Kirim</button>
-            </div>
-        </footer>
     </div>
 
-    <!-- MODAL HAPUS PESAN -->
+    <!-- MODAL DELETE -->
     <div id="delete-modal" class="modal" style="display: none;">
-        <div class="modal-content glass">
-            <h4>Hapus Pesan?</h4>
-            <button type="button" id="btn-delete-forme">Hapus untuk Saya</button>
-            <button type="button" id="btn-delete-foreveryone" class="btn-danger">Hapus untuk Semua Orang</button>
-            <button type="button" id="btn-cancel-delete" class="btn-secondary">Batal</button>
+        <div class="modal-content">
+            <p>Hapus pesan ini?</p>
+            <button id="btn-delete-forme" class="secondary-btn">Hapus untuk Saya</button>
+            <button id="btn-delete-foreveryone" class="danger-btn" style="display: none;">Hapus untuk Semua</button>
+            <button id="btn-cancel-delete" class="primary-btn">Batal</button>
         </div>
     </div>
 
-    <!-- MODAL PREVIEW MEDIA LIGHTBOX -->
+    <!-- MODAL MEDIA PREVIEW -->
     <div id="media-preview-modal" class="modal" style="display: none;" onclick="closeMediaPreview()">
-        <span class="close-preview">&times;</span>
-        <div class="preview-content-box" onclick="event.stopPropagation()">
-            <img id="preview-image" src="" style="display: none;" />
-            <video id="preview-video" src="" controls style="display: none;"></video>
+        <div class="modal-media-content" onclick="event.stopPropagation()">
+            <span class="close-modal" onclick="closeMediaPreview()">&times;</span>
+            <img id="preview-image" style="display: none; max-width: 100%; max-height: 80vh;" />
+            <video id="preview-video" controls style="display: none; max-width: 100%; max-height: 80vh;"></video>
         </div>
     </div>
 
+    <!-- OVERLAY UPLOAD -->
+    <div id="upload-overlay" class="modal" style="display: none;">
+        <div class="modal-content">
+            <p id="upload-status-text">Mengunggah file...</p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
