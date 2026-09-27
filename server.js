@@ -7,74 +7,69 @@ const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
+
+// Menambahkan CORS untuk mengizinkan koneksi dari Railway Edge Proxy
 const io = new Server(server, {
-    maxHttpBufferSize: 1e8 // 100MB limit
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    },
+    maxHttpBufferSize: 1e8 // 100MB
 });
 
-// Memastikan folder 'public/uploads' ada
+// Memastikan folder uploads ada
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Konfigurasi Multer untuk Upload Media (Foto, Video, VN)
+// Storage Multer
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, uploadDir);
-    },
+    destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname) || '.webm';
         cb(null, 'file-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + ext);
     }
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
-// Memahami body JSON & URL Encoded
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Serve folder statis
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadDir));
 
-// Route Upload File
 app.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ success: false, message: 'Tidak ada file yang diunggah' });
-    }
-    const fileUrl = `/uploads/${req.file.filename}`;
-    res.json({ success: true, fileUrl: fileUrl, filename: req.file.filename });
+    if (!req.file) return res.status(400).json({ success: false });
+    res.json({ success: true, fileUrl: `/uploads/${req.file.filename}` });
 });
 
-// Database sementara simpan pengguna (in-memory)
+// Database pengguna in-memory
 const users = {};
 
-// Socket.io Logika Chat & Realtime
 io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
 
-    // Cek apakah User ID sudah terdaftar
     socket.on('check-user-id', (userId) => {
         const exists = Boolean(users[userId]);
         socket.emit('check-user-id-result', { exists });
     });
 
-    // Login atau Register
     socket.on('user-login', (data) => {
         const { userId, password, name } = data;
 
         if (!userId || !password) {
-            return socket.emit('login-response', { success: false, message: 'ID dan Password wajib diisi!' });
+            return socket.emit('login-response', { success: false, message: 'ID dan Password tidak boleh kosong!' });
         }
 
-        // Jika user belum ada, daftarkan
+        // Pendaftaran otomatis jika user belum ada
         if (!users[userId]) {
             users[userId] = {
                 password: password,
-                name: name || ('User ' + userId)
+                name: name ? name : 'User ' + userId
             };
         }
 
-        // Verifikasi password
+        // Verifikasi kata sandi
         if (users[userId].password === password) {
             socket.emit('login-response', {
                 success: true,
@@ -89,24 +84,13 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Mengetik (Typing)
-    socket.on('typing', (data) => {
-        socket.broadcast.emit('display-typing', data);
-    });
-
-    // Kirim Pesan Chat
-    socket.on('chat message', (msg) => {
-        io.emit('chat message', msg);
-    });
-
-    // Hapus Pesan untuk Semua Orang
-    socket.on('delete-message-everyone', (data) => {
-        io.emit('message-deleted-everyone', data);
-    });
+    socket.on('typing', (data) => socket.broadcast.emit('display-typing', data));
+    socket.on('chat message', (msg) => io.emit('chat message', msg));
+    socket.on('delete-message-everyone', (data) => io.emit('message-deleted-everyone', data));
 });
 
-// Port Dinamis Sesuai Lingkungan Railway (WAJIB process.env.PORT)
+// Port dinamis untuk Railway
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server berjalan di port ${PORT}`);
+    console.log(`Server aktif pada port ${PORT}`);
 });
