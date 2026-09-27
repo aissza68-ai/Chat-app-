@@ -1,7 +1,7 @@
-// Mengatur koneksi Socket.io dengan pengulangan otomatis
 const socket = io({
-    transports: ['websocket', 'polling'],
-    upgrade: true
+    reconnection: true,
+    reconnectionAttempts: Infinity,
+    reconnectionDelay: 1000
 });
 
 let currentUserId = '';
@@ -15,7 +15,7 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Mengambil Elemen UI
+// Element UI
 const loginScreen = document.getElementById('login-screen');
 const chatScreen = document.getElementById('chat-screen');
 const inputUserId = document.getElementById('input-user-id');
@@ -24,6 +24,7 @@ const inputName = document.getElementById('input-name');
 const nameGroup = document.getElementById('name-group');
 const btnLogin = document.getElementById('btn-login');
 
+const onlineCountEl = document.getElementById('online-count') || document.querySelector('.online-status') || document.querySelector('header span');
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
@@ -51,8 +52,26 @@ const videoBtn = document.getElementById('video-btn');
 const videoInput = document.getElementById('video-input');
 
 // -------------------------------------------------------------
-// PENANGANAN MASUK & DENGARKAN EVENT LOGIN
+// UPDATE STATUS ONLINE
 // -------------------------------------------------------------
+socket.on('update-online-count', (count) => {
+    if (onlineCountEl) {
+        onlineCountEl.innerText = `Online: ${count}`;
+    }
+});
+
+// -------------------------------------------------------------
+// LOGIKA LOGIN, AUTO-LOGIN & REGISTER
+// -------------------------------------------------------------
+// Auto Login dari LocalStorage jika pernah masuk
+window.addEventListener('DOMContentLoaded', () => {
+    const savedUserId = localStorage.getItem('chat_userId');
+    const savedPassword = localStorage.getItem('chat_password');
+    if (savedUserId && savedPassword) {
+        socket.emit('user-login', { userId: savedUserId, password: savedPassword });
+    }
+});
+
 if (inputUserId) {
     inputUserId.addEventListener('input', () => {
         const val = inputUserId.value.trim();
@@ -76,50 +95,51 @@ socket.on('check-user-id-result', (res) => {
 });
 
 function executeLogin(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+    if (e) e.preventDefault();
 
     const userId = inputUserId ? inputUserId.value.trim() : '';
     const password = inputPassword ? inputPassword.value.trim() : '';
     const name = inputName ? inputName.value.trim() : '';
 
-    if (!userId) return alert('Silakan isi ID Pengguna terlebih dahulu.');
-    if (!password) return alert('Silakan isi Password terlebih dahulu.');
+    if (!userId) return alert('Masukkan ID Pengguna!');
+    if (!password) return alert('Masukkan Password!');
 
-    // Kirim data ke socket
     socket.emit('user-login', { userId, password, name });
-    return false;
 }
 
-if (btnLogin) {
-    btnLogin.onclick = executeLogin;
-}
-
-// Mematikan perilaku refresh bawaan dari form
-document.querySelectorAll('form').forEach(form => {
-    form.onsubmit = (e) => {
-        e.preventDefault();
-        executeLogin(e);
-        return false;
-    };
-});
+if (btnLogin) btnLogin.onclick = executeLogin;
+document.querySelectorAll('form').forEach(f => f.onsubmit = executeLogin);
 
 socket.on('login-response', (res) => {
     if (res.success) {
         currentUserId = res.userId;
         currentUsername = res.username;
+
+        // Simpan Sesi di Browser agar tidak minta daftar lagi
+        localStorage.setItem('chat_userId', res.userId);
+        const passVal = inputPassword ? inputPassword.value.trim() : localStorage.getItem('chat_password');
+        if (passVal) localStorage.setItem('chat_password', passVal);
+
         if (loginScreen) loginScreen.style.display = 'none';
         if (chatScreen) chatScreen.style.display = 'flex';
-        if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // Tampilkan riwayat pesan lama
+        if (messagesContainer) {
+            messagesContainer.innerHTML = '';
+            if (res.history) {
+                res.history.forEach(msg => renderMessage(msg));
+            }
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
     } else {
-        alert(res.message || 'Gagal masuk ke sistem.');
+        alert(res.message || 'Gagal masuk!');
+        localStorage.removeItem('chat_userId');
+        localStorage.removeItem('chat_password');
     }
 });
 
 // -------------------------------------------------------------
-// PENANGANAN BALAS PESAN
+// BALAS PESAN
 // -------------------------------------------------------------
 if (cancelReplyBtn) {
     cancelReplyBtn.onclick = () => {
@@ -137,7 +157,7 @@ function setReplyMessage(msgData) {
 }
 
 // -------------------------------------------------------------
-// INDIKATOR MENGETIK
+// TYPING INDICATOR
 // -------------------------------------------------------------
 if (messageInput) {
     messageInput.addEventListener('input', () => {
@@ -192,12 +212,12 @@ function sendTextMessage() {
 }
 
 // -------------------------------------------------------------
-// REKAM PESAN SUARA (VN)
+// VOICE NOTE
 // -------------------------------------------------------------
 if (vnBtn) {
     vnBtn.onclick = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            return alert('Akses mikrofon tidak didukung pada peramban ini.');
+            return alert('Akses mikrofon tidak didukung.');
         }
 
         try {
@@ -227,7 +247,7 @@ if (vnBtn) {
             }, 1000);
 
         } catch (err) {
-            alert('Izin penggunaan mikrofon ditolak.');
+            alert('Izin mikrofon ditolak.');
         }
     };
 }
@@ -261,7 +281,7 @@ function stopRecording(send) {
 }
 
 // -------------------------------------------------------------
-// UNGGAH MEDIA (GAMBAR & VIDEO)
+// MEDIA UPLOAD
 // -------------------------------------------------------------
 if (imageBtn) imageBtn.onclick = () => imageInput.click();
 if (imageInput) {
@@ -311,7 +331,7 @@ function uploadFileWithProgress(file, type) {
 }
 
 // -------------------------------------------------------------
-// MENAMPILKAN PESAN DI LAYAR
+// RENDER PESAN
 // -------------------------------------------------------------
 socket.on('chat message', (msg) => {
     renderMessage(msg);
@@ -325,6 +345,12 @@ function renderMessage(msg) {
     msgDiv.id = msg.id;
     const isSelf = msg.userId === currentUserId;
     msgDiv.classList.add('message', isSelf ? 'self' : 'other');
+
+    if (msg.deleted) {
+        msgDiv.innerHTML = `<em>Pesan ini telah dihapus</em>`;
+        messagesContainer.appendChild(msgDiv);
+        return;
+    }
 
     let replyHTML = '';
     if (msg.replyTo) {
@@ -370,7 +396,7 @@ window.triggerReply = function(msg) {
 };
 
 // -------------------------------------------------------------
-// LOGIKA HAPUS PESAN
+// HAPUS PESAN
 // -------------------------------------------------------------
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
@@ -415,3 +441,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
+                                                         
