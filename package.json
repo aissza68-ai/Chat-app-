@@ -1,18 +1,15 @@
 {
   "name": "chat-app",
   "version": "1.0.0",
-  "description": "Aplikasi Obrolan Real-Time dengan SQLite, WebSocket, dan Upload Media",
+  "description": "Aplikasi Obrolan Real-Time dengan Database Persisten",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node server.js"
   },
   "keywords": [
     "chat",
     "socket.io",
-    "express",
-    "sqlite3",
-    "realtime"
+    "express"
   ],
   "author": "",
   "license": "ISC",
@@ -20,10 +17,7 @@
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "socket.io": "^4.7.2",
-    "sqlite3": "^5.1.7"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nedb-promises": "^6.2.1"
   },
   "engines": {
     "node": ">=18.0.0"
