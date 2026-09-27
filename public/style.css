@@ -15,7 +15,7 @@ html, body {
     color: #ffffff;
 }
 
-/* Glassmorphism Effect */
+/* Glassmorphism Standard Effect */
 .glass {
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(16px);
@@ -92,7 +92,7 @@ html, body {
     position: relative;
 }
 
-/* HEADER COMPACT & GLASS */
+/* HEADER GLASS & USER ONLINE LIST */
 .glass-header {
     padding: 8px 12px;
     flex-shrink: 0;
@@ -103,18 +103,20 @@ html, body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 14px;
+    padding: 8px 12px;
     border-radius: 14px;
+    gap: 10px;
 }
 
 .user-info-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .user-info-group h3 {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
 }
 
@@ -127,13 +129,67 @@ html, body {
     color: #00c6ff;
 }
 
+/* KOTAK-KOTAK PENGGUNA ONLINE GLASS */
+.online-users-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    max-width: 55%;
+    padding: 2px 4px;
+    scrollbar-width: none;
+}
+
+.online-users-container::-webkit-scrollbar {
+    display: none;
+}
+
+.online-user-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.online-user-card .online-mini-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #00ff88;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #00ff88;
+}
+
+.online-user-card .online-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.online-user-card .online-id-badge {
+    font-size: 9px;
+    color: #00c6ff;
+    background: rgba(0, 198, 255, 0.2);
+    padding: 1px 4px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 198, 255, 0.3);
+}
+
 .status-badge {
     display: flex;
     align-items: center;
     gap: 5px;
     background: rgba(0, 0, 0, 0.25);
-    padding: 3px 8px;
+    padding: 4px 8px;
     border-radius: 12px;
+    flex-shrink: 0;
 }
 
 .status-dot {
@@ -328,7 +384,7 @@ html, body {
     flex-shrink: 0;
 }
 
-/* LOADING MODAL GLASS WITH SPINNER */
+/* LOADING MODAL GLASS */
 .upload-modal {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
@@ -363,7 +419,7 @@ html, body {
     100% { transform: rotate(360deg); }
 }
 
-/* MODAL PENINJAUAN MEDIA */
+/* PREVIEW MEDIA */
 .preview-content-box {
     max-width: 90vw;
     max-height: 80vh;
@@ -420,4 +476,4 @@ html, body {
 
 .btn-danger {
     background: rgba(255, 59, 48, 0.8) !important;
-}
+    }
