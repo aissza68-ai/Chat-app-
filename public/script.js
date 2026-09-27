@@ -1,54 +1,102 @@
 /* ==========================================================================
-   KODE LENGKAP JAVASCRIPT CHAT & MANAJEMEN PESAN (FULL TANPA PEMANGKASAN)
+   KODE LENGKAP SCRIPT.JS (LOGIN AMAN & PERBAIKAN BUG SWIPE PESAN TERHAPUS)
    ========================================================================== */
 
-// 1. State Aplikasi (Penyimpanan Data Lokal Sifatnya Sementara)
+// State aplikasi untuk menyimpan data sesi login dan chat
 const chatState = {
-    currentUser: {
-        id: "user_123", // Contoh ID user yang sedang login
-        name: "Saya"
-    },
+    currentUser: null,
     replyingTo: null,
-    messages: [
-        // Contoh data dummy awal pesan (bisa diganti dari database/websocket server Anda)
-        { id: "msg_1", senderId: "user_456", senderName: "Budi", text: "Halo, apa kabar?", time: "10:00", isDeleted: false },
-        { id: "msg_2", senderId: "user_123", senderName: "Saya", text: "Baik Budi, ada yang bisa dibantu?", time: "10:01", isDeleted: false }
-    ]
+    messages: []
 };
 
-// 2. Fungsi Utama: Render Daftar Pesan ke Kontainer Chat
-function renderMessages(messagesArray) {
-    const container = document.getElementById('messages-container');
-    if (!container) {
-        console.warn("Elemen #messages-container tidak ditemukan di DOM.");
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Tangani event tombol login / masuk
+    const loginForm = document.getElementById('login-form'); // Sesuaikan dengan ID form atau tombol login Anda di HTML
+    const loginButton = document.getElementById('login-btn');    // Atau sesuaikan dengan id tombol masuk Anda
+
+    if (loginButton) {
+        loginButton.addEventListener('click', handleLogin);
+    }
+});
+
+// Fungsi proses login agar bisa masuk ke menu chat
+function handleLogin(e) {
+    if (e) e.preventDefault();
+    
+    // Ambil nilai dari input login (sesuaikan id input dengan HTML Anda)
+    const userIdInput = document.getElementById('user-id') || document.querySelector('input[type="text"]');
+    const userNameInput = document.getElementById('user-name') || document.querySelectorAll('input')[2]; // misal input ke-3 nama
+    
+    const userId = userIdInput ? userIdInput.value.trim() : "user_" + Math.floor(Math.random() * 1000);
+    const userName = userNameInput ? userNameInput.value.trim() : "User";
+
+    if (!userId) {
+        alert("Masukkan ID Pengguna terlebih dahulu!");
         return;
     }
+
+    // Set user yang sedang aktif
+    chatState.currentUser = {
+        id: userId,
+        name: userName || userId
+    };
+
+    // Sembunyikan halaman login, tampilkan layar chat (sesuaikan nama elemen screen Anda)
+    const loginScreen = document.getElementById('login-screen') || document.querySelector('.login-card').parentNode;
+    const chatScreen = document.getElementById('chat-screen');
+
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (chatScreen) {
+        chatScreen.style.display = 'flex';
+    } else {
+        // Fallback jika layout menggunakan class screen
+        document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+        const mainChat = document.querySelector('.chat-container') ? document.querySelector('.chat-container').parentNode : null;
+        if(mainChat) mainChat.style.display = 'flex';
+    }
+
+    // Mulai muat atau inisialisasi chat
+    initChatApp();
+}
+
+function initChatApp() {
+    console.log("Aplikasi chat dimulai untuk:", chatState.currentUser);
+    // Panggil fungsi render pesan Anda di sini jika sudah ada data
+    if (typeof renderMessages === 'function' && chatState.messages.length > 0) {
+        renderMessages(chatState.messages);
+    }
+}
+
+// ==========================================================================
+// 2. FUNGSI RENDER PESAN & PENGAMANAN SWIPE (MENCEGAH PESAN HAPUS BISA DI-SWIPE)
+// ==========================================================================
+
+function renderMessages(messagesArray) {
+    const container = document.getElementById('messages-container');
+    if (!container) return;
     
-    // Bersihkan kontainer sebelum merender ulang
     container.innerHTML = '';
 
     messagesArray.forEach((msg) => {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');
         
-        // Tentukan apakah pesan milik user yang sedang login (self) atau orang lain (other)
-        const isSelf = msg.senderId === chatState.currentUser.id;
+        // Cek apakah pesan dikirim oleh user yang sedang login
+        const isSelf = chatState.currentUser && msg.senderId === chatState.currentUser.id;
         messageDiv.classList.add(isSelf ? 'self' : 'other');
 
-        // Cek apakah status pesan sudah dihapus
+        // Pengecekan mutlak status pesan terhapus
         const isDeleted = msg.isDeleted || msg.text === "Pesan ini telah dihapus";
 
         if (isDeleted) {
-            // Jika pesan sudah dihapus, tampilkan teks khusus dan pastikan TIDAK ADA event swipe/reply
             messageDiv.classList.add('deleted-message');
             messageDiv.innerHTML = `
                 <div class="msg-content" style="font-style: italic; opacity: 0.7; color: inherit;">
                     Pesan ini telah dihapus
                 </div>
             `;
-            // PENTING: Kita sengaja tidak memanggil fungsi attachSwipeListener di sini
+            // CATATAN: Pesan terhapus SENGAJA TIDAK DIBERI event listener swipe agar bersih & aman!
         } else {
-            // Jika pesan normal/aktif, render isi pesan secara lengkap
             messageDiv.innerHTML = `
                 <span class="msg-sender">${escapeHtml(msg.senderName || 'User')}</span>
                 <div class="msg-text">${escapeHtml(msg.text)}</div>
@@ -57,33 +105,24 @@ function renderMessages(messagesArray) {
                 </div>
             `;
 
-            // PASANG EVENT SWIPE HANYA PADA PESAN YANG BELUM DIHAPUS
+            // PASANG EVENT SWIPE HANYA PADA PESAN AKTIF (YANG BELUM DIHAPUS)
             attachSwipeListener(messageDiv, msg);
-            
-            // Tambahan opsional: Klik pesan untuk memunculkan opsi hapus pesan
-            messageDiv.addEventListener('click', () => {
-                if (!msg.isDeleted) {
-                    // Contoh fungsi pemanggil modal hapus pesan Anda
-                    openDeleteConfirmationModal(msg.id);
-                }
-            });
         }
 
         container.appendChild(messageDiv);
     });
 
-    // Auto-scroll otomatis ke pesan paling bawah (terbaru)
     container.scrollTop = container.scrollHeight;
 }
 
-// 3. Fungsi Gestur Swipe (Geser ke Kanan untuk Membalas / Reply)
+// Fungsi Gestur Swipe (Geser ke Kanan untuk Reply) dengan Validasi Ketat
 function attachSwipeListener(element, messageData) {
     let startX = 0;
     let currentX = 0;
     let isSwiping = false;
 
     element.addEventListener('touchstart', (e) => {
-        // Pengecekan pengaman mutlak: Jika pesan sudah dihapus, abaikan sentuhan swipe!
+        // Validasi ganda: Tolak swipe jika pesan terdeteksi sudah dihapus
         if (messageData.isDeleted || messageData.text === "Pesan ini telah dihapus") {
             return;
         }
@@ -96,7 +135,7 @@ function attachSwipeListener(element, messageData) {
         currentX = e.touches[0].clientX;
         let diffX = currentX - startX;
 
-        // Berikan efek geser visual ringan ke kanan saat jari digeser (maksimal 100px)
+        // Efek geser visual ringan ke kanan
         if (diffX > 0 && diffX < 100) {
             element.style.transform = `translateX(${diffX}px)`;
         }
@@ -107,13 +146,11 @@ function attachSwipeListener(element, messageData) {
         isSwiping = false;
         
         let diffX = currentX - startX;
-        
-        // Kembalikan posisi elemen pesan secara halus ke tempat semula
         element.style.transform = 'translateX(0px)';
 
-        // Jika digeser ke kanan sejauh lebih dari 60px, trigger pratinjau balasan
+        // Jika digeser ke kanan lebih dari 60px
         if (diffX > 60) {
-            // Pengecekan ulang keamanan status hapus sebelum memicu pratinjau reply
+            // Validasi akhir sebelum memicu pratinjau balasan
             if (!messageData.isDeleted && messageData.text !== "Pesan ini telah dihapus") {
                 triggerReplyPreview(messageData);
             }
@@ -124,11 +161,10 @@ function attachSwipeListener(element, messageData) {
     });
 }
 
-// 4. Fungsi Menampilkan Kotak Pratinjau Balasan (Reply Preview Box) di Atas Input
+// Fungsi Menampilkan Pratinjau Balasan (Reply Preview)
 function triggerReplyPreview(messageData) {
     chatState.replyingTo = messageData;
     
-    // Cari elemen penampung pratinjau, buat baru jika belum ada di DOM
     let replyBox = document.getElementById('reply-preview-container');
     if (!replyBox) {
         replyBox = document.createElement('div');
@@ -141,7 +177,6 @@ function triggerReplyPreview(messageData) {
         }
     }
 
-    // Isi konten kotak pratinjau balasan
     replyBox.innerHTML = `
         <div style="overflow: hidden;">
             <strong style="color: #00c6ff; display: block; font-size: 12px;">Membalas ${escapeHtml(messageData.senderName)}:</strong>
@@ -154,7 +189,7 @@ function triggerReplyPreview(messageData) {
     replyBox.style.display = 'flex';
 }
 
-// 5. Fungsi Membatalkan Balasan (Close Reply Preview)
+// Fungsi Membatalkan Balasan
 function cancelReply() {
     chatState.replyingTo = null;
     const replyBox = document.getElementById('reply-preview-container');
@@ -164,34 +199,7 @@ function cancelReply() {
     }
 }
 
-// 6. Fungsi Eksekusi Penghapusan Pesan (Mengubah Status Menjadi "Pesan ini telah dihapus")
-function deleteMessage(messageId) {
-    const msgIndex = chatState.messages.findIndex(m => m.id === messageId);
-    if (msgIndex !== -1) {
-        // Ubah data pesan di state lokal menjadi status terhapus
-        chatState.messages[msgIndex].isDeleted = true;
-        chatState.messages[msgIndex].text = "Pesan ini telah dihapus";
-        
-        // Jika pesan yang sedang aktif dibalas (reply) ternyata dihapus, batalkan balasan tersebut
-        if (chatState.replyingTo && chatState.replyingTo.id === messageId) {
-            cancelReply();
-        }
-        
-        // Render ulang daftar pesan agar tampilan langsung bersih dari teks lama dan terkunci dari swipe
-        renderMessages(chatState.messages);
-    }
-}
-
-// 7. Fungsi Simulasi Modal Konfirmasi Hapus Pesan (Opsional / Penyesuaian UI Anda)
-function openDeleteConfirmationModal(messageId) {
-    // Anda bisa mengintegrasikan fungsi ini dengan modal kustom aplikasi Anda
-    const userConfirmed = confirm("Apakah Anda yakin ingin menghapus pesan ini?");
-    if (userConfirmed) {
-        deleteMessage(messageId);
-    }
-}
-
-// 8. Fungsi Utilitas Keamanan: Mencegah XSS Injection pada Teks Chat
+// Fungsi Keamanan Mencegah XSS
 function escapeHtml(text) {
     if (!text) return '';
     return text
@@ -201,9 +209,3 @@ function escapeHtml(text) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
-
-// --- INISIALISASI AWAL SAAT SCRIPT DI-LOAD ---
-document.addEventListener('DOMContentLoaded', () => {
-    // Render pesan awal saat halaman pertama kali dibuka
-    renderMessages(chatState.messages);
-});
