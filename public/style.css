@@ -157,6 +157,7 @@ html, body {
     white-space: nowrap;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
+    cursor: pointer;
 }
 
 .online-user-card .online-mini-dot {
@@ -477,7 +478,8 @@ html, body {
 .btn-danger {
     background: rgba(255, 59, 48, 0.8) !important;
 }
-/* STYLES FOR MENTIONS / TAGS */
+
+/* MENTIONS / TAGS STYLE */
 .mention-tag {
     color: #00c6ff;
     font-weight: 600;
