@@ -2,9 +2,11 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ruang Obrolan</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Pustaka Socket.IO via CDN -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -35,7 +37,7 @@
         <header>
             <div class="header-info">
                 <h3>Ruang Obrolan</h3>
-                <small>Online: <span id="online-count">0</span></small>
+                <small>Online: <span id="online-count">1</span></small>
             </div>
         </header>
 
@@ -86,8 +88,6 @@
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
-    </html>
-    
+</html>
