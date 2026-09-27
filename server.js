@@ -10,7 +10,11 @@ const app = express();
 const server = http.createServer(app);
 
 const io = new Server(server, {
-    cors: { origin: "*", methods: ["GET", "POST"] },
+    cors: { 
+        origin: "*", 
+        methods: ["GET", "POST"] 
+    },
+    transports: ['websocket', 'polling'],
     maxHttpBufferSize: 1e8
 });
 
@@ -90,7 +94,7 @@ io.on('connection', (socket) => {
         try {
             msg.createdAt = Date.now();
             await dbMessages.insert(msg);
-            io.emit('chat message', msg);
+            socket.broadcast.emit('chat message', msg);
         } catch (err) {
             console.error('Gagal menyimpan pesan:', err);
         }
