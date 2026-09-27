@@ -16,99 +16,165 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Element UI
-const loginScreen = document.getElementById('login-screen');
-const chatScreen = document.getElementById('chat-screen');
-const inputUserId = document.getElementById('input-user-id');
-const inputPassword = document.getElementById('input-password');
-const inputName = document.getElementById('input-name');
-const nameGroup = document.getElementById('name-group');
-const btnLogin = document.getElementById('btn-login');
-
-const headerUserName = document.getElementById('header-user-name');
-const headerUserId = document.getElementById('header-user-id');
-const onlineCountEl = document.getElementById('online-count');
-const onlineUsersList = document.getElementById('online-users-list');
-
-const messagesContainer = document.getElementById('messages');
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
-const typingIndicator = document.getElementById('typing-indicator');
-
-const replyPreview = document.getElementById('reply-preview');
-const replyName = document.getElementById('reply-name');
-const replyText = document.getElementById('reply-text');
-const cancelReplyBtn = document.getElementById('cancel-reply');
-
-const deleteModal = document.getElementById('delete-modal');
-const btnDeleteForMe = document.getElementById('btn-delete-forme');
-const btnDeleteForEveryone = document.getElementById('btn-delete-foreveryone');
-const btnCancelDelete = document.getElementById('btn-cancel-delete');
-
-const vnBtn = document.getElementById('vn-btn');
-const recordingBox = document.getElementById('recording-box');
-const recTimer = document.getElementById('rec-timer');
-const cancelRecBtn = document.getElementById('cancel-rec-btn');
-const stopSendRecBtn = document.getElementById('stop-send-rec-btn');
-
-const imageBtn = document.getElementById('image-btn');
-const imageInput = document.getElementById('image-input');
-const videoBtn = document.getElementById('video-btn');
-const videoInput = document.getElementById('video-input');
-const uploadOverlay = document.getElementById('upload-overlay');
-const uploadStatusText = document.getElementById('upload-status-text');
-
-const mediaPreviewModal = document.getElementById('media-preview-modal');
-const previewImage = document.getElementById('preview-image');
-const previewVideo = document.getElementById('preview-video');
+// Elemen UI dideklarasikan di dalam fungsi init atau setelah DOM siap untuk mencegah null
+let loginScreen, chatScreen, inputUserId, inputPassword, inputName, nameGroup, btnLogin, loginForm;
+let headerUserName, headerUserId, onlineCountEl, onlineUsersList;
+let messagesContainer, messageInput, sendBtn, typingIndicator;
+let replyPreview, replyName, replyText, cancelReplyBtn;
+let deleteModal, btnDeleteForMe, btnDeleteForEveryone, btnCancelDelete;
+let vnBtn, recordingBox, recTimer, cancelRecBtn, stopSendRecBtn;
+let imageBtn, imageInput, videoBtn, videoInput, uploadOverlay, uploadStatusText;
+let mediaPreviewModal, previewImage, previewVideo;
 
 // ==========================================
 // EFEK SUARA (WEB AUDIO API GENERATOR)
 // ==========================================
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let audioCtx = null;
 
-function playSound(type) {
+function getAudioContext() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
     if (audioCtx.state === 'suspended') {
         audioCtx.resume();
     }
+    return audioCtx;
+}
 
-    if (type === 'send') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
+function playSound(type) {
+    try {
+        const ctx = getAudioContext();
+        if (type === 'send') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.08);
+        } else if (type === 'receive') {
+            const now = ctx.currentTime;
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
 
-    } else if (type === 'receive') {
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+            osc1.type = 'sine';
+            osc2.type = 'sine';
+            osc1.frequency.setValueAtTime(800, now);
+            osc2.frequency.setValueAtTime(1050, now + 0.08);
 
-        osc1.type = 'sine';
-        osc2.type = 'sine';
-        osc1.frequency.setValueAtTime(800, now);
-        osc2.frequency.setValueAtTime(1050, now + 0.08);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
 
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
 
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        osc1.start(now);
-        osc1.stop(now + 0.08);
-        osc2.start(now + 0.08);
-        osc2.stop(now + 0.3);
+            osc1.start(now);
+            osc1.stop(now + 0.08);
+            osc2.start(now + 0.08);
+            osc2.stop(now + 0.3);
+        }
+    } catch (e) {
+        console.log("Audio not allowed yet");
     }
 }
+
+// Inisialisasi setelah DOM sepenuhnya siap
+window.addEventListener('DOMContentLoaded', () => {
+    loginScreen = document.getElementById('login-screen');
+    chatScreen = document.getElementById('chat-screen');
+    inputUserId = document.getElementById('input-user-id');
+    inputPassword = document.getElementById('input-password');
+    inputName = document.getElementById('input-name');
+    nameGroup = document.getElementById('name-group');
+    btnLogin = document.getElementById('btn-login');
+    loginForm = document.getElementById('login-form');
+
+    headerUserName = document.getElementById('header-user-name');
+    headerUserId = document.getElementById('header-user-id');
+    onlineCountEl = document.getElementById('online-count');
+    onlineUsersList = document.getElementById('online-users-list');
+
+    messagesContainer = document.getElementById('messages');
+    messageInput = document.getElementById('message-input');
+    sendBtn = document.getElementById('send-btn');
+    typingIndicator = document.getElementById('typing-indicator');
+
+    replyPreview = document.getElementById('reply-preview');
+    replyName = document.getElementById('reply-name');
+    replyText = document.getElementById('reply-text');
+    cancelReplyBtn = document.getElementById('cancel-reply');
+
+    deleteModal = document.getElementById('delete-modal');
+    btnDeleteForMe = document.getElementById('btn-delete-forme');
+    btnDeleteForEveryone = document.getElementById('btn-delete-foreveryone');
+    btnCancelDelete = document.getElementById('btn-cancel-delete');
+
+    vnBtn = document.getElementById('vn-btn');
+    recordingBox = document.getElementById('recording-box');
+    recTimer = document.getElementById('rec-timer');
+    cancelRecBtn = document.getElementById('cancel-rec-btn');
+    stopSendRecBtn = document.getElementById('stop-send-rec-btn');
+
+    imageBtn = document.getElementById('image-btn');
+    imageInput = document.getElementById('image-input');
+    videoBtn = document.getElementById('video-btn');
+    videoInput = document.getElementById('video-input');
+    uploadOverlay = document.getElementById('upload-overlay');
+    uploadStatusText = document.getElementById('upload-status-text');
+
+    mediaPreviewModal = document.getElementById('media-preview-modal');
+    previewImage = document.getElementById('preview-image');
+    previewVideo = document.getElementById('preview-video');
+
+    // Event listener input ID untuk cek apakah user sudah terdaftar
+    if (inputUserId) {
+        inputUserId.addEventListener('input', () => {
+            const val = inputUserId.value.trim();
+            if (val.length > 0) {
+                socket.emit('check-user-id', val);
+            } else {
+                if (nameGroup) nameGroup.style.display = 'block';
+                if (btnLogin) btnLogin.innerText = 'Masuk / Daftar';
+            }
+        });
+    }
+
+    // Tangani aksi submit login/daftar
+    const handleLoginAction = (e) => {
+        if (e) e.preventDefault();
+        const userId = inputUserId ? inputUserId.value.trim() : '';
+        const password = inputPassword ? inputPassword.value.trim() : '';
+        const name = inputName ? inputName.value.trim() : '';
+
+        if (!userId) {
+            alert('Silakan isi ID Pengguna!');
+            return;
+        }
+        if (!password) {
+            alert('Silakan isi Password!');
+            return;
+        }
+
+        getAudioContext();
+        socket.emit('user-login', { userId, password, name });
+    };
+
+    if (btnLogin) btnLogin.onclick = handleLoginAction;
+    if (loginForm) loginForm.onsubmit = handleLoginAction;
+
+    // Cek Auto Login dari LocalStorage
+    const savedUserId = localStorage.getItem('chat_userId');
+    const savedPassword = localStorage.getItem('chat_password');
+    if (savedUserId && savedPassword) {
+        socket.emit('user-login', { userId: savedUserId, password: savedPassword, name: '' });
+    }
+});
 
 // UPDATE DAFTAR PENGGUNA ONLINE
 socket.on('update-online-users', (users) => {
@@ -134,27 +200,6 @@ socket.on('update-online-users', (users) => {
     });
 });
 
-// Auto Login Check
-window.addEventListener('DOMContentLoaded', () => {
-    const savedUserId = localStorage.getItem('chat_userId');
-    const savedPassword = localStorage.getItem('chat_password');
-    if (savedUserId && savedPassword) {
-        socket.emit('user-login', { userId: savedUserId, password: savedPassword, name: '' });
-    }
-});
-
-if (inputUserId) {
-    inputUserId.addEventListener('input', () => {
-        const val = inputUserId.value.trim();
-        if (val.length > 0) {
-            socket.emit('check-user-id', val);
-        } else {
-            if (nameGroup) nameGroup.style.display = 'block';
-            if (btnLogin) btnLogin.innerText = 'Masuk / Daftar';
-        }
-    });
-}
-
 socket.on('check-user-id-result', (res) => {
     if (res.exists) {
         if (nameGroup) nameGroup.style.display = 'none';
@@ -164,24 +209,6 @@ socket.on('check-user-id-result', (res) => {
         if (btnLogin) btnLogin.innerText = 'Daftar Baru';
     }
 });
-
-function executeLogin(e) {
-    if (e) e.preventDefault();
-    const userId = inputUserId ? inputUserId.value.trim() : '';
-    const password = inputPassword ? inputPassword.value.trim() : '';
-    const name = inputName ? inputName.value.trim() : '';
-
-    if (!userId) return alert('Silakan isi ID Pengguna!');
-    if (!password) return alert('Silakan isi Password!');
-
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
-    socket.emit('user-login', { userId, password, name });
-}
-
-if (btnLogin) btnLogin.onclick = executeLogin;
-const loginForm = document.getElementById('login-form');
-if (loginForm) loginForm.onsubmit = executeLogin;
 
 socket.on('login-response', (res) => {
     if (res.success) {
@@ -216,7 +243,7 @@ socket.on('login-response', (res) => {
     }
 });
 
-// NOTIFIKASI PESAN DENGAN DETEKSI MENTION
+// NOTIFIKASI BROWSER DENGAN MENTION
 function showNotification(msg) {
     if (!("Notification" in window)) return;
 
@@ -536,47 +563,4 @@ function renderMessage(msg) {
         ${replyHTML}
         ${contentHTML}
         <div class="msg-footer">
-            <small class="msg-time">${msg.timestamp || ''}</small>
-        </div>
-    `;
-
-    // Swipe Gesture to Reply
-    let startX = 0;
-    let currentX = 0;
-
-    msgDiv.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-    }, { passive: true });
-
-    msgDiv.addEventListener('touchmove', (e) => {
-        currentX = e.touches[0].clientX;
-        let diff = currentX - startX;
-        if (diff > 0 && diff < 80) {
-            msgDiv.style.transform = `translateX(${diff}px)`;
-        }
-    }, { passive: true });
-
-    msgDiv.addEventListener('touchend', () => {
-        let diff = currentX - startX;
-        msgDiv.style.transform = 'translateX(0px)';
-        if (diff > 50) {
-            setReplyMessage(msg);
-        }
-        startX = 0;
-        currentX = 0;
-    });
-
-    messagesContainer.appendChild(msgDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-window.tagUserFromChat = function(username) {
-    if (messageInput) {
-        messageInput.value += `@${username} `;
-        messageInput.focus();
-    }
-};
-
-// Delete Modal Handling
-window.openDeleteModal = function(msgId, msgUserId) {
-    pendingDel
+            <smal
