@@ -11,14 +11,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: { origin: "*", methods: ["GET", "POST"] },
-    maxHttpBufferSize: 1e8 // Limit 100MB
+    maxHttpBufferSize: 1e8
 });
 
-// Database Persisten NeDB
 const dbUsers = Datastore.create({ filename: path.join(__dirname, 'users.db'), autoload: true });
 const dbMessages = Datastore.create({ filename: path.join(__dirname, 'messages.db'), autoload: true });
 
-// Folder Upload
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -38,20 +36,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadDir));
 
-// Route Upload File
 app.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'File gagal terunggah' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'Upload gagal' });
     res.json({ success: true, fileUrl: `/uploads/${req.file.filename}` });
 });
 
-// Counter User Online
 let activeSockets = new Set();
 
 io.on('connection', (socket) => {
     activeSockets.add(socket.id);
     io.emit('update-online-count', activeSockets.size);
 
-    // Cek User ID
     socket.on('check-user-id', async (userId) => {
         try {
             const user = await dbUsers.findOne({ userId });
@@ -61,7 +56,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Login & Register
     socket.on('user-login', async (data) => {
         const { userId, password, name } = data;
         if (!userId || !password) {
@@ -88,11 +82,10 @@ io.on('connection', (socket) => {
                 history: history
             });
         } catch (err) {
-            socket.emit('login-response', { success: false, message: 'Terjadi kesalahan sistem server!' });
+            socket.emit('login-response', { success: false, message: 'Terjadi kesalahan server!' });
         }
     });
 
-    // Kirim Pesan
     socket.on('chat message', async (msg) => {
         try {
             msg.createdAt = Date.now();
@@ -103,12 +96,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Status Mengetik
     socket.on('typing', (data) => {
         socket.broadcast.emit('display-typing', data);
     });
 
-    // Hapus Pesan Semua Orang
     socket.on('delete-message-everyone', async (data) => {
         try {
             await dbMessages.update({ id: data.msgId }, { $set: { deleted: true } });
@@ -118,7 +109,6 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Disconnect
     socket.on('disconnect', () => {
         activeSockets.delete(socket.id);
         io.emit('update-online-count', activeSockets.size);
