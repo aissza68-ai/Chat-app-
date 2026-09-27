@@ -1,9 +1,7 @@
+// Mengatur koneksi Socket.io dengan pengulangan otomatis
 const socket = io({
-    reconnection: true,
-    reconnectionAttempts: Infinity,
-    reconnectionDelay: 1000,
-    reconnectionDelayMax: 5000,
-    timeout: 20000
+    transports: ['websocket', 'polling'],
+    upgrade: true
 });
 
 let currentUserId = '';
@@ -17,7 +15,7 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Elemen UI
+// Mengambil Elemen UI
 const loginScreen = document.getElementById('login-screen');
 const chatScreen = document.getElementById('chat-screen');
 const inputUserId = document.getElementById('input-user-id');
@@ -53,7 +51,7 @@ const videoBtn = document.getElementById('video-btn');
 const videoInput = document.getElementById('video-input');
 
 // -------------------------------------------------------------
-// LOGIKA LOGIN & USER REGISTER (DIPERBAIKI)
+// PENANGANAN MASUK & DENGARKAN EVENT LOGIN
 // -------------------------------------------------------------
 if (inputUserId) {
     inputUserId.addEventListener('input', () => {
@@ -77,36 +75,36 @@ socket.on('check-user-id-result', (res) => {
     }
 });
 
-// Fungsi penanganan klik tombol masuk
-function handleLogin(e) {
-    if (e) e.preventDefault();
+function executeLogin(e) {
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
 
     const userId = inputUserId ? inputUserId.value.trim() : '';
     const password = inputPassword ? inputPassword.value.trim() : '';
     const name = inputName ? inputName.value.trim() : '';
 
-    if (!userId) {
-        alert('Silakan masukkan ID Pengguna!');
-        return;
-    }
-    if (!password) {
-        alert('Silakan masukkan Password!');
-        return;
-    }
+    if (!userId) return alert('Silakan isi ID Pengguna terlebih dahulu.');
+    if (!password) return alert('Silakan isi Password terlebih dahulu.');
 
-    // Kirim data login ke server
+    // Kirim data ke socket
     socket.emit('user-login', { userId, password, name });
+    return false;
 }
 
 if (btnLogin) {
-    btnLogin.addEventListener('click', handleLogin);
+    btnLogin.onclick = executeLogin;
 }
 
-// Mencegah form reload jika ada tag <form>
-const loginForm = document.querySelector('#login-screen form');
-if (loginForm) {
-    loginForm.addEventListener('submit', handleLogin);
-}
+// Mematikan perilaku refresh bawaan dari form
+document.querySelectorAll('form').forEach(form => {
+    form.onsubmit = (e) => {
+        e.preventDefault();
+        executeLogin(e);
+        return false;
+    };
+});
 
 socket.on('login-response', (res) => {
     if (res.success) {
@@ -116,18 +114,18 @@ socket.on('login-response', (res) => {
         if (chatScreen) chatScreen.style.display = 'flex';
         if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
     } else {
-        alert(res.message || 'Gagal masuk! Periksa kembali ID dan Password Anda.');
+        alert(res.message || 'Gagal masuk ke sistem.');
     }
 });
 
 // -------------------------------------------------------------
-// BALAS PESAN (REPLY)
+// PENANGANAN BALAS PESAN
 // -------------------------------------------------------------
 if (cancelReplyBtn) {
-    cancelReplyBtn.addEventListener('click', () => {
+    cancelReplyBtn.onclick = () => {
         selectedReplyMsg = null;
         if (replyPreview) replyPreview.style.display = 'none';
-    });
+    };
 }
 
 function setReplyMessage(msgData) {
@@ -139,7 +137,7 @@ function setReplyMessage(msgData) {
 }
 
 // -------------------------------------------------------------
-// LOGIKA KETIK (TYPING INDICATOR)
+// INDIKATOR MENGETIK
 // -------------------------------------------------------------
 if (messageInput) {
     messageInput.addEventListener('input', () => {
@@ -164,7 +162,7 @@ socket.on('display-typing', (data) => {
 // -------------------------------------------------------------
 // KIRIM PESAN TEKS
 // -------------------------------------------------------------
-if (sendBtn) sendBtn.addEventListener('click', sendTextMessage);
+if (sendBtn) sendBtn.onclick = sendTextMessage;
 if (messageInput) {
     messageInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendTextMessage();
@@ -194,12 +192,12 @@ function sendTextMessage() {
 }
 
 // -------------------------------------------------------------
-// LOGIKA VOICE NOTE (RECORDING)
+// REKAM PESAN SUARA (VN)
 // -------------------------------------------------------------
 if (vnBtn) {
-    vnBtn.addEventListener('click', async () => {
+    vnBtn.onclick = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            return alert('Perangkat/Browser Anda tidak mendukung perekaman suara.');
+            return alert('Akses mikrofon tidak didukung pada peramban ini.');
         }
 
         try {
@@ -207,13 +205,8 @@ if (vnBtn) {
             audioChunks = [];
 
             let options = {};
-            if (MediaRecorder.isTypeSupported('audio/webm')) {
-                options = { mimeType: 'audio/webm' };
-            } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-                options = { mimeType: 'audio/mp4' };
-            } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
-                options = { mimeType: 'audio/ogg' };
-            }
+            if (MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/webm' };
+            else if (MediaRecorder.isTypeSupported('audio/mp4')) options = { mimeType: 'audio/mp4' };
 
             mediaRecorder = new MediaRecorder(stream, options);
 
@@ -234,13 +227,13 @@ if (vnBtn) {
             }, 1000);
 
         } catch (err) {
-            alert('Izin mikrofon ditolak atau terjadi masalah!');
+            alert('Izin penggunaan mikrofon ditolak.');
         }
-    });
+    };
 }
 
-if (cancelRecBtn) cancelRecBtn.addEventListener('click', () => stopRecording(false));
-if (stopSendRecBtn) stopSendRecBtn.addEventListener('click', () => stopRecording(true));
+if (cancelRecBtn) cancelRecBtn.onclick = () => stopRecording(false);
+if (stopSendRecBtn) stopSendRecBtn.onclick = () => stopRecording(true);
 
 function stopRecording(send) {
     if (!mediaRecorder) return;
@@ -251,7 +244,7 @@ function stopRecording(send) {
     mediaRecorder.onstop = () => {
         if (send && audioChunks.length > 0) {
             const mimeType = mediaRecorder.mimeType || 'audio/webm';
-            const ext = mimeType.includes('mp4') ? 'm4a' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+            const ext = mimeType.includes('mp4') ? 'm4a' : 'webm';
 
             const audioBlob = new Blob(audioChunks, { type: mimeType });
             const audioFile = new File([audioBlob], `vn-${Date.now()}.${ext}`, { type: mimeType });
@@ -268,24 +261,24 @@ function stopRecording(send) {
 }
 
 // -------------------------------------------------------------
-// UPLOAD MEDIA (IMAGE & VIDEO)
+// UNGGAH MEDIA (GAMBAR & VIDEO)
 // -------------------------------------------------------------
-if (imageBtn) imageBtn.addEventListener('click', () => imageInput.click());
+if (imageBtn) imageBtn.onclick = () => imageInput.click();
 if (imageInput) {
-    imageInput.addEventListener('change', (e) => {
+    imageInput.onchange = (e) => {
         const file = e.target.files[0];
         if (file) uploadFileWithProgress(file, 'image');
         imageInput.value = '';
-    });
+    };
 }
 
-if (videoBtn) videoBtn.addEventListener('click', () => videoInput.click());
+if (videoBtn) videoBtn.onclick = () => videoInput.click();
 if (videoInput) {
-    videoInput.addEventListener('change', (e) => {
+    videoInput.onchange = (e) => {
         const file = e.target.files[0];
         if (file) uploadFileWithProgress(file, 'video');
         videoInput.value = '';
-    });
+    };
 }
 
 function uploadFileWithProgress(file, type) {
@@ -298,12 +291,11 @@ function uploadFileWithProgress(file, type) {
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success || data.fileUrl || data.filename) {
-            const fileUrl = data.fileUrl || `/uploads/${data.filename}`;
+        if (data.success && data.fileUrl) {
             const msgData = {
                 id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
                 type: type,
-                fileUrl: fileUrl,
+                fileUrl: data.fileUrl,
                 sender: currentUsername,
                 userId: currentUserId,
                 replyTo: selectedReplyMsg,
@@ -319,7 +311,7 @@ function uploadFileWithProgress(file, type) {
 }
 
 // -------------------------------------------------------------
-// MENAMPILKAN PESAN DI CHAT (RENDER)
+// MENAMPILKAN PESAN DI LAYAR
 // -------------------------------------------------------------
 socket.on('chat message', (msg) => {
     renderMessage(msg);
@@ -327,8 +319,7 @@ socket.on('chat message', (msg) => {
 
 function renderMessage(msg) {
     if (!messagesContainer) return;
-    const existingMsg = document.getElementById(msg.id);
-    if (existingMsg) return;
+    if (document.getElementById(msg.id)) return;
 
     const msgDiv = document.createElement('div');
     msgDiv.id = msg.id;
@@ -379,47 +370,43 @@ window.triggerReply = function(msg) {
 };
 
 // -------------------------------------------------------------
-// HAPUS PESAN (DELETE FOR ME / EVERYONE)
+// LOGIKA HAPUS PESAN
 // -------------------------------------------------------------
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
     if (deleteModal) deleteModal.style.display = 'flex';
 
     if (btnDeleteForEveryone) {
-        if (msgUserId === currentUserId) {
-            btnDeleteForEveryone.style.display = 'block';
-        } else {
-            btnDeleteForEveryone.style.display = 'none';
-        }
+        btnDeleteForEveryone.style.display = (msgUserId === currentUserId) ? 'block' : 'none';
     }
 };
 
 if (btnCancelDelete) {
-    btnCancelDelete.addEventListener('click', () => {
+    btnCancelDelete.onclick = () => {
         pendingDeleteMsgId = null;
         if (deleteModal) deleteModal.style.display = 'none';
-    });
+    };
 }
 
 if (btnDeleteForMe) {
-    btnDeleteForMe.addEventListener('click', () => {
+    btnDeleteForMe.onclick = () => {
         if (pendingDeleteMsgId) {
             const el = document.getElementById(pendingDeleteMsgId);
             if (el) el.remove();
         }
         pendingDeleteMsgId = null;
         if (deleteModal) deleteModal.style.display = 'none';
-    });
+    };
 }
 
 if (btnDeleteForEveryone) {
-    btnDeleteForEveryone.addEventListener('click', () => {
+    btnDeleteForEveryone.onclick = () => {
         if (pendingDeleteMsgId) {
             socket.emit('delete-message-everyone', { msgId: pendingDeleteMsgId, userId: currentUserId });
         }
         pendingDeleteMsgId = null;
         if (deleteModal) deleteModal.style.display = 'none';
-    });
+    };
 }
 
 socket.on('message-deleted-everyone', (data) => {
@@ -428,250 +415,3 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-= new FormData();
-    formData.append('file', file);
-
-    fetch('/upload', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success || data.fileUrl || data.filename) {
-            const fileUrl = data.fileUrl || `/uploads/${data.filename}`;
-            const msgData = {
-                id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                type: type,
-                fileUrl: fileUrl,
-                sender: currentUsername,
-                userId: currentUserId,
-                replyTo: selectedReplyMsg,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            socket.emit('chat message', msgData);
-
-            selectedReplyMsg = null;
-            if (replyPreview) replyPreview.style.display = 'none';
-        }
-    })
-    .catch(err => console.error('Upload gagal:', err));
-}
-
-// -------------------------------------------------------------
-// MENAMPILKAN PESAN DI CHAT (RENDER)
-// -------------------------------------------------------------
-socket.on('chat message', (msg) => {
-    renderMessage(msg);
-});
-
-function renderMessage(msg) {
-    if (!messagesContainer) return;
-    const existingMsg = document.getElementById(msg.id);
-    if (existingMsg) return;
-
-    const msgDiv = document.createElement('div');
-    msgDiv.id = msg.id;
-    const isSelf = msg.userId === currentUserId;
-    msgDiv.classList.add('message', isSelf ? 'self' : 'other');
-
-    let replyHTML = '';
-    if (msg.replyTo) {
-        const replyContent = msg.replyTo.type === 'text' ? msg.replyTo.text : `[${msg.replyTo.type.toUpperCase()}]`;
-        replyHTML = `
-            <div class="reply-box">
-                <small><strong>${msg.replyTo.sender}</strong></small>
-                <p>${replyContent}</p>
-            </div>
-        `;
-    }
-
-    let contentHTML = '';
-    if (msg.type === 'image') {
-        contentHTML = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px;" />`;
-    } else if (msg.type === 'video') {
-        contentHTML = `<video src="${msg.fileUrl}" controls playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;"></video>`;
-    } else if (msg.type === 'audio') {
-        contentHTML = `<audio src="${msg.fileUrl}" controls preload="metadata" style="width: 100%;"></audio>`;
-    } else {
-        contentHTML = `<p>${msg.text}</p>`;
-    }
-
-    const deleteBtnHTML = `<span class="delete-icon" onclick="openDeleteModal('${msg.id}', '${msg.userId}')">&times;</span>`;
-
-    msgDiv.innerHTML = `
-        ${deleteBtnHTML}
-        <strong>${msg.sender}</strong>
-        ${replyHTML}
-        ${contentHTML}
-        <div class="msg-footer">
-            <small class="msg-time">${msg.timestamp || ''}</small>
-            <button class="btn-reply-msg" onclick='triggerReply(${JSON.stringify(msg)})'>Balas</button>
-        </div>
-    `;
-
-    messagesContainer.appendChild(msgDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-window.triggerReply = function(msg) {
-    setReplyMessage(msg);
-};
-
-// -------------------------------------------------------------
-// HAPUS PESAN (DELETE FOR ME / EVERYONE)
-// -------------------------------------------------------------
-window.openDeleteModal = function(msgId, msgUserId) {
-    pendingDeleteMsgId = msgId;
-    if (deleteModal) deleteModal.style.display = 'flex';
-
-    if (btnDeleteForEveryone) {
-        if (msgUserId === currentUserId) {
-            btnDeleteForEveryone.style.display = 'block';
-        } else {
-            btnDeleteForEveryone.style.display = 'none';
-        }
-    }
-};
-
-if (btnCancelDelete) {
-    btnCancelDelete.addEventListener('click', () => {
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    });
-}
-
-if (btnDeleteForMe) {
-    btnDeleteForMe.addEventListener('click', () => {
-        if (pendingDeleteMsgId) {
-            const el = document.getElementById(pendingDeleteMsgId);
-            if (el) el.remove();
-        }
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    });
-}
-
-if (btnDeleteForEveryone) {
-    btnDeleteForEveryone.addEventListener('click', () => {
-        if (pendingDeleteMsgId) {
-            socket.emit('delete-message-everyone', { msgId: pendingDeleteMsgId, userId: currentUserId });
-        }
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    });
-}
-
-socket.on('message-deleted-everyone', (data) => {
-    const el = document.getElementById(data.msgId);
-    if (el) {
-        el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
-    }
-});
-splay = 'none';
-        }
-    })
-    .catch(err => console.error('Upload gagal:', err));
-}
-
-// -------------------------------------------------------------
-// MENAMPILKAN PESAN DI CHAT (RENDER)
-// -------------------------------------------------------------
-socket.on('chat message', (msg) => {
-    renderMessage(msg);
-});
-
-function renderMessage(msg) {
-    const existingMsg = document.getElementById(msg.id);
-    if (existingMsg) return;
-
-    const msgDiv = document.createElement('div');
-    msgDiv.id = msg.id;
-    const isSelf = msg.userId === currentUserId;
-    msgDiv.classList.add('message', isSelf ? 'self' : 'other');
-
-    let replyHTML = '';
-    if (msg.replyTo) {
-        const replyContent = msg.replyTo.type === 'text' ? msg.replyTo.text : `[${msg.replyTo.type.toUpperCase()}]`;
-        replyHTML = `
-            <div class="reply-box">
-                <small><strong>${msg.replyTo.sender}</strong></small>
-                <p>${replyContent}</p>
-            </div>
-        `;
-    }
-
-    let contentHTML = '';
-    if (msg.type === 'image') {
-        contentHTML = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px;" />`;
-    } else if (msg.type === 'video') {
-        contentHTML = `<video src="${msg.fileUrl}" controls playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;"></video>`;
-    } else if (msg.type === 'audio') {
-        contentHTML = `<audio src="${msg.fileUrl}" controls preload="metadata" style="width: 100%;"></audio>`;
-    } else {
-        contentHTML = `<p>${msg.text}</p>`;
-    }
-
-    const deleteBtnHTML = `<span class="delete-icon" onclick="openDeleteModal('${msg.id}', '${msg.userId}')">&times;</span>`;
-
-    msgDiv.innerHTML = `
-        ${deleteBtnHTML}
-        <strong>${msg.sender}</strong>
-        ${replyHTML}
-        ${contentHTML}
-        <div class="msg-footer">
-            <small class="msg-time">${msg.timestamp || ''}</small>
-            <button class="btn-reply-msg" onclick='triggerReply(${JSON.stringify(msg)})'>Balas</button>
-        </div>
-    `;
-
-    messagesContainer.appendChild(msgDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
-
-window.triggerReply = function(msg) {
-    setReplyMessage(msg);
-};
-
-// -------------------------------------------------------------
-// HAPUS PESAN (DELETE FOR ME / EVERYONE)
-// -------------------------------------------------------------
-window.openDeleteModal = function(msgId, msgUserId) {
-    pendingDeleteMsgId = msgId;
-    deleteModal.style.display = 'flex';
-
-    if (msgUserId === currentUserId) {
-        btnDeleteForEveryone.style.display = 'block';
-    } else {
-        btnDeleteForEveryone.style.display = 'none';
-    }
-};
-
-btnCancelDelete.addEventListener('click', () => {
-    pendingDeleteMsgId = null;
-    deleteModal.style.display = 'none';
-});
-
-btnDeleteForMe.addEventListener('click', () => {
-    if (pendingDeleteMsgId) {
-        const el = document.getElementById(pendingDeleteMsgId);
-        if (el) el.remove();
-    }
-    pendingDeleteMsgId = null;
-    deleteModal.style.display = 'none';
-});
-
-btnDeleteForEveryone.addEventListener('click', () => {
-    if (pendingDeleteMsgId) {
-        socket.emit('delete-message-everyone', { msgId: pendingDeleteMsgId, userId: currentUserId });
-    }
-    pendingDeleteMsgId = null;
-    deleteModal.style.display = 'none';
-});
-
-socket.on('message-deleted-everyone', (data) => {
-    const el = document.getElementById(data.msgId);
-    if (el) {
-        el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
-    }
-});
-        
