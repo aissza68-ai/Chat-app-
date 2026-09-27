@@ -2,10 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WhatsApp Web Clone - Grup</title>
     <link rel="stylesheet" href="style.css">
-    <!-- FontAwesome untuk Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
@@ -30,14 +29,13 @@
                     <i class="fa-solid fa-search"></i>
                     <input type="text" id="search-input" placeholder="Cari atau mulai chat baru">
                 </div>
-                <i class="fa-solid fa-filter"></i>
             </div>
 
             <div class="chat-list">
-                <!-- Item Grup -->
+                <!-- Item Grup dengan PP Grup Bersama -->
                 <div class="chat-item active" onclick="switchChat('Grup Developer AI')">
-                    <div class="chat-avatar">
-                        <img src="https://i.pravatar.cc/150?img=68" alt="Grup">
+                    <div class="chat-avatar group-avatar-bg">
+                        <i class="fa-solid fa-users"></i>
                     </div>
                     <div class="chat-info">
                         <div class="chat-title-time">
@@ -50,21 +48,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Chat Pribadi Contoh -->
-                <div class="chat-item" onclick="alert('Fitur chat pribadi belum dipilih, silakan pilih Grup Developer AI!')">
-                    <div class="chat-avatar">
-                        <img src="https://i.pravatar.cc/150?img=32" alt="User">
-                    </div>
-                    <div class="chat-info">
-                        <div class="chat-title-time">
-                            <h4>Budi Santoso</h4>
-                            <span class="time">Kemarin</span>
-                        </div>
-                        <div class="chat-last-msg">
-                            <p>Oke, nanti saya kabari lagi ya.</p>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -72,7 +55,9 @@
         <div class="chat-area">
             <div class="chat-header">
                 <div class="active-profile" onclick="toggleGroupInfo()">
-                    <img src="https://i.pravatar.cc/150?img=68" alt="Grup Avatar">
+                    <div class="active-avatar group-avatar-bg">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
                     <div class="active-info">
                         <h3>Grup Developer AI</h3>
                         <p id="group-members-desc">Andi, Budi, Sinta, Siti, Anda</p>
@@ -89,10 +74,9 @@
             <!-- Ruang Pesan / Chat Messages -->
             <div class="messages-container" id="messages-container">
                 <div class="encryption-notice">
-                    <i class="fa-solid fa-lock"></i> Pesan dan panggilan bersifat end-to-end encryption. Tidak seorang pun di luar chat ini, bahkan WhatsApp, dapat membaca atau mendengarkannya.
+                    <i class="fa-solid fa-lock"></i> Pesan dan panggilan bersifat end-to-end encryption.
                 </div>
 
-                <!-- Contoh Pesan Masuk -->
                 <div class="message incoming">
                     <div class="message-content">
                         <span class="sender-name">Andi Developer</span>
@@ -112,7 +96,7 @@
 
             <!-- Indikator Sedang Mengetik -->
             <div class="typing-indicator" id="typing-indicator" style="display: none;">
-                <span></span><span></span><span></span> <i>Siti sedang mengetik...</i>
+                <span></span><span></span><span></span> <i id="typing-text">Siti sedang mengetik...</i>
             </div>
 
             <!-- Footer / Input Chat -->
