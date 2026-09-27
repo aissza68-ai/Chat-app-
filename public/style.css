@@ -18,14 +18,12 @@ body {
 .whatsapp-container {
     width: 100%;
     height: 100%;
-    max-width: 100%;
-    max-height: 100%;
     background-color: #f0f2f5;
     display: flex;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    position: relative;
 }
 
-/* Style Khusus PP Grup Bersama (Ikon Orang Banyak dengan Background Hijau WA) */
+/* PP Grup Bersama */
 .group-avatar-bg {
     width: 42px;
     height: 42px;
@@ -45,10 +43,10 @@ body {
     font-size: 20px;
 }
 
-/* Sidebar */
+/* Sidebar Kiri */
 .sidebar {
     width: 340px;
-    min-width: 280px;
+    min-width: 300px;
     background-color: #ffffff;
     border-right: 1px solid #d1d7db;
     display: flex;
@@ -116,7 +114,6 @@ body {
     padding: 10px 15px;
     gap: 12px;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .chat-item:hover, .chat-item.active {
@@ -140,15 +137,11 @@ body {
     font-size: 15px;
     color: #111b21;
     font-weight: 400;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .chat-title-time .time {
     font-size: 11px;
     color: #667781;
-    flex-shrink: 0;
 }
 
 .chat-last-msg {
@@ -159,7 +152,7 @@ body {
     text-overflow: ellipsis;
 }
 
-/* Chat Area */
+/* Area Chat Kanan */
 .chat-area {
     flex: 1;
     display: flex;
@@ -186,28 +179,17 @@ body {
     align-items: center;
     gap: 12px;
     cursor: pointer;
-    overflow: hidden;
-}
-
-.active-info {
-    overflow: hidden;
 }
 
 .active-info h3 {
     font-size: 15px;
     color: #111b21;
     font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .active-info p {
     font-size: 11.5px;
     color: #667781;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .header-icons {
@@ -216,13 +198,12 @@ body {
     color: #54656f;
     font-size: 17px;
     cursor: pointer;
-    flex-shrink: 0;
 }
 
-/* Messages Container */
+/* Container Pesan */
 .messages-container {
     flex: 1;
-    padding: 15px 5%;
+    padding: 15px 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
@@ -237,20 +218,22 @@ body {
     padding: 8px 12px;
     border-radius: 8px;
     margin-bottom: 10px;
-    box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
-    max-width: 500px;
+    max-width: 450px;
     align-self: center;
 }
 
-/* Gelembung Pesan & Animasi */
+/* Perbaikan Gelembung Pesan Supaya Menyamping Normal */
 .message {
-    max-width: 75%;
+    min-width: 120px;
+    max-width: 65%;
+    width: fit-content;
     padding: 6px 10px 8px 10px;
     border-radius: 7.5px;
     position: relative;
     font-size: 14px;
     box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
     animation: fadeInScale 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+    word-break: break-word;
 }
 
 @keyframes fadeInScale {
@@ -280,25 +263,25 @@ body {
 
 .message p {
     color: #111b21;
-    word-wrap: break-word;
-    padding-right: 40px;
+    display: inline;
+    padding-right: 35px; /* Ruang untuk jam */
 }
 
 .msg-time {
     font-size: 10px;
     color: #667781;
-    float: right;
-    margin-top: -4px;
-    margin-left: 8px;
+    position: absolute;
+    bottom: 4px;
+    right: 8px;
+    white-space: nowrap;
 }
 
-/* Typing Indicator */
+/* Indikator Mengetik */
 .typing-indicator {
     background-color: #ffffff;
     padding: 8px 14px;
     border-radius: 15px;
     align-self: flex-start;
-    margin-left: 5%;
     margin-bottom: 8px;
     font-size: 12.5px;
     color: #667781;
@@ -325,7 +308,7 @@ body {
     40% { transform: scale(1.0); }
 }
 
-/* Footer / Input Chat */
+/* Footer / Input */
 .chat-footer {
     height: 60px;
     background-color: #f0f2f5;
@@ -364,10 +347,8 @@ body {
     color: #54656f;
     font-size: 19px;
     cursor: pointer;
-    transition: transform 0.2s;
 }
 
 .footer-send:hover {
     color: #00a884;
-    transform: scale(1.1);
 }
