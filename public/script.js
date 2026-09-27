@@ -53,15 +53,15 @@ const videoBtn = document.getElementById('video-btn');
 const videoInput = document.getElementById('video-input');
 
 // -------------------------------------------------------------
-// LOGIKA LOGIN & USER REGISTER
+// LOGIKA LOGIN & USER REGISTER (DIPERBAIKI)
 // -------------------------------------------------------------
 if (inputUserId) {
     inputUserId.addEventListener('input', () => {
         const val = inputUserId.value.trim();
-        if (val.length === 4) {
+        if (val.length >= 4) {
             socket.emit('check-user-id', val);
         } else {
-            if (nameGroup) nameGroup.style.display = 'none';
+            if (nameGroup) nameGroup.style.display = 'block';
             if (btnLogin) btnLogin.innerText = 'Masuk / Daftar';
         }
     });
@@ -77,21 +77,35 @@ socket.on('check-user-id-result', (res) => {
     }
 });
 
+// Fungsi penanganan klik tombol masuk
+function handleLogin(e) {
+    if (e) e.preventDefault();
+
+    const userId = inputUserId ? inputUserId.value.trim() : '';
+    const password = inputPassword ? inputPassword.value.trim() : '';
+    const name = inputName ? inputName.value.trim() : '';
+
+    if (!userId) {
+        alert('Silakan masukkan ID Pengguna!');
+        return;
+    }
+    if (!password) {
+        alert('Silakan masukkan Password!');
+        return;
+    }
+
+    // Kirim data login ke server
+    socket.emit('user-login', { userId, password, name });
+}
+
 if (btnLogin) {
-    btnLogin.addEventListener('click', () => {
-        const userId = inputUserId.value.trim();
-        const password = inputPassword.value.trim();
-        const name = inputName ? inputName.value.trim() : '';
+    btnLogin.addEventListener('click', handleLogin);
+}
 
-        if (!userId) {
-            return alert('Masukkan ID Pengguna!');
-        }
-        if (!password) {
-            return alert('Masukkan Password!');
-        }
-
-        socket.emit('user-login', { userId, password, name });
-    });
+// Mencegah form reload jika ada tag <form>
+const loginForm = document.querySelector('#login-screen form');
+if (loginForm) {
+    loginForm.addEventListener('submit', handleLogin);
 }
 
 socket.on('login-response', (res) => {
@@ -102,7 +116,7 @@ socket.on('login-response', (res) => {
         if (chatScreen) chatScreen.style.display = 'flex';
         if (messagesContainer) messagesContainer.scrollTop = messagesContainer.scrollHeight;
     } else {
-        alert(res.message || 'Gagal masuk!');
+        alert(res.message || 'Gagal masuk! Periksa kembali ID dan Password Anda.');
     }
 });
 
@@ -276,6 +290,145 @@ if (videoInput) {
 
 function uploadFileWithProgress(file, type) {
     const formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/upload', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success || data.fileUrl || data.filename) {
+            const fileUrl = data.fileUrl || `/uploads/${data.filename}`;
+            const msgData = {
+                id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+                type: type,
+                fileUrl: fileUrl,
+                sender: currentUsername,
+                userId: currentUserId,
+                replyTo: selectedReplyMsg,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            };
+            socket.emit('chat message', msgData);
+
+            selectedReplyMsg = null;
+            if (replyPreview) replyPreview.style.display = 'none';
+        }
+    })
+    .catch(err => console.error('Upload gagal:', err));
+}
+
+// -------------------------------------------------------------
+// MENAMPILKAN PESAN DI CHAT (RENDER)
+// -------------------------------------------------------------
+socket.on('chat message', (msg) => {
+    renderMessage(msg);
+});
+
+function renderMessage(msg) {
+    if (!messagesContainer) return;
+    const existingMsg = document.getElementById(msg.id);
+    if (existingMsg) return;
+
+    const msgDiv = document.createElement('div');
+    msgDiv.id = msg.id;
+    const isSelf = msg.userId === currentUserId;
+    msgDiv.classList.add('message', isSelf ? 'self' : 'other');
+
+    let replyHTML = '';
+    if (msg.replyTo) {
+        const replyContent = msg.replyTo.type === 'text' ? msg.replyTo.text : `[${msg.replyTo.type.toUpperCase()}]`;
+        replyHTML = `
+            <div class="reply-box">
+                <small><strong>${msg.replyTo.sender}</strong></small>
+                <p>${replyContent}</p>
+            </div>
+        `;
+    }
+
+    let contentHTML = '';
+    if (msg.type === 'image') {
+        contentHTML = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px;" />`;
+    } else if (msg.type === 'video') {
+        contentHTML = `<video src="${msg.fileUrl}" controls playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;"></video>`;
+    } else if (msg.type === 'audio') {
+        contentHTML = `<audio src="${msg.fileUrl}" controls preload="metadata" style="width: 100%;"></audio>`;
+    } else {
+        contentHTML = `<p>${msg.text}</p>`;
+    }
+
+    const deleteBtnHTML = `<span class="delete-icon" onclick="openDeleteModal('${msg.id}', '${msg.userId}')">&times;</span>`;
+
+    msgDiv.innerHTML = `
+        ${deleteBtnHTML}
+        <strong>${msg.sender}</strong>
+        ${replyHTML}
+        ${contentHTML}
+        <div class="msg-footer">
+            <small class="msg-time">${msg.timestamp || ''}</small>
+            <button class="btn-reply-msg" onclick='triggerReply(${JSON.stringify(msg)})'>Balas</button>
+        </div>
+    `;
+
+    messagesContainer.appendChild(msgDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+window.triggerReply = function(msg) {
+    setReplyMessage(msg);
+};
+
+// -------------------------------------------------------------
+// HAPUS PESAN (DELETE FOR ME / EVERYONE)
+// -------------------------------------------------------------
+window.openDeleteModal = function(msgId, msgUserId) {
+    pendingDeleteMsgId = msgId;
+    if (deleteModal) deleteModal.style.display = 'flex';
+
+    if (btnDeleteForEveryone) {
+        if (msgUserId === currentUserId) {
+            btnDeleteForEveryone.style.display = 'block';
+        } else {
+            btnDeleteForEveryone.style.display = 'none';
+        }
+    }
+};
+
+if (btnCancelDelete) {
+    btnCancelDelete.addEventListener('click', () => {
+        pendingDeleteMsgId = null;
+        if (deleteModal) deleteModal.style.display = 'none';
+    });
+}
+
+if (btnDeleteForMe) {
+    btnDeleteForMe.addEventListener('click', () => {
+        if (pendingDeleteMsgId) {
+            const el = document.getElementById(pendingDeleteMsgId);
+            if (el) el.remove();
+        }
+        pendingDeleteMsgId = null;
+        if (deleteModal) deleteModal.style.display = 'none';
+    });
+}
+
+if (btnDeleteForEveryone) {
+    btnDeleteForEveryone.addEventListener('click', () => {
+        if (pendingDeleteMsgId) {
+            socket.emit('delete-message-everyone', { msgId: pendingDeleteMsgId, userId: currentUserId });
+        }
+        pendingDeleteMsgId = null;
+        if (deleteModal) deleteModal.style.display = 'none';
+    });
+}
+
+socket.on('message-deleted-everyone', (data) => {
+    const el = document.getElementById(data.msgId);
+    if (el) {
+        el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
+    }
+});
+= new FormData();
     formData.append('file', file);
 
     fetch('/upload', {
