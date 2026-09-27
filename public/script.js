@@ -142,6 +142,11 @@ socket.on('login-response', (res) => {
         if (loginScreen) loginScreen.style.display = 'none';
         if (chatScreen) chatScreen.style.display = 'flex';
 
+        // Minta Izin Notifikasi Browser
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+
         if (messagesContainer) {
             messagesContainer.innerHTML = '';
             if (res.history && Array.isArray(res.history)) {
@@ -155,6 +160,31 @@ socket.on('login-response', (res) => {
         localStorage.removeItem('chat_password');
     }
 });
+
+// FUNGSI NOTIFIKASI PESAN
+function showNotification(msg) {
+    if (!("Notification" in window)) return;
+
+    if (document.hidden && Notification.permission === "granted" && msg.userId !== currentUserId) {
+        let title = `Pesan dari ${msg.sender}`;
+        let bodyText = '';
+
+        if (msg.type === 'image') bodyText = '📷 Mengirim gambar';
+        else if (msg.type === 'video') bodyText = '🎥 Mengirim video';
+        else if (msg.type === 'audio') bodyText = '🎙️ Mengirim voice note';
+        else bodyText = msg.text;
+
+        const notification = new Notification(title, {
+            body: bodyText,
+            icon: '/favicon.ico'
+        });
+
+        notification.onclick = function() {
+            window.focus();
+            notification.close();
+        };
+    }
+}
 
 // Reply Preview
 if (cancelReplyBtn) {
@@ -386,6 +416,7 @@ window.closeMediaPreview = function() {
 // Render Messages & Swipe Balas
 socket.on('chat message', (msg) => {
     renderMessage(msg);
+    showNotification(msg); // <-- PANGGIL NOTIFIKASI
 });
 
 function renderMessage(msg) {
@@ -510,4 +541,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-                                   
+            
