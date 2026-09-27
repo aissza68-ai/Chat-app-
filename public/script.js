@@ -15,7 +15,7 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Elemen DOM UI
+// Ambil Elemen UI
 const loginScreen = document.getElementById('login-screen');
 const chatScreen = document.getElementById('chat-screen');
 const inputUserId = document.getElementById('input-user-id');
@@ -24,7 +24,7 @@ const inputName = document.getElementById('input-name');
 const nameGroup = document.getElementById('name-group');
 const btnLogin = document.getElementById('btn-login');
 
-const onlineCountEl = document.getElementById('online-count') || document.querySelector('.online-status') || document.querySelector('header span');
+const onlineCountEl = document.getElementById('online-count') || document.querySelector('.online-status');
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
@@ -50,18 +50,20 @@ const imageBtn = document.getElementById('image-btn');
 const imageInput = document.getElementById('image-input');
 const videoBtn = document.getElementById('video-btn');
 const videoInput = document.getElementById('video-input');
+const uploadProgress = document.getElementById('upload-progress');
 
 // -------------------------------------------------------------
-// STATUS ONLINE
+// FIX STATUS ONLINE (TIDAK DOUBLE)
 // -------------------------------------------------------------
 socket.on('update-online-count', (count) => {
     if (onlineCountEl) {
-        onlineCountEl.innerText = `Online: ${count}`;
+        // Hanya menampilkan angka agar tidak "Online: Online: 1"
+        onlineCountEl.innerText = count; 
     }
 });
 
 // -------------------------------------------------------------
-// AUTO LOGIN & REGISTER
+// AUTO LOGIN & REGISTRASI
 // -------------------------------------------------------------
 window.addEventListener('DOMContentLoaded', () => {
     const savedUserId = localStorage.getItem('chat_userId');
@@ -94,10 +96,7 @@ socket.on('check-user-id-result', (res) => {
 });
 
 function executeLogin(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
+    if (e) e.preventDefault();
 
     const userId = inputUserId ? inputUserId.value.trim() : '';
     const password = inputPassword ? inputPassword.value.trim() : '';
@@ -107,7 +106,6 @@ function executeLogin(e) {
     if (!password) return alert('Silakan isi Password!');
 
     socket.emit('user-login', { userId, password, name });
-    return false;
 }
 
 if (btnLogin) btnLogin.onclick = executeLogin;
@@ -133,14 +131,14 @@ socket.on('login-response', (res) => {
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
     } else {
-        alert(res.message || 'Gagal masuk ke obrolan!');
+        alert(res.message || 'Gagal masuk!');
         localStorage.removeItem('chat_userId');
         localStorage.removeItem('chat_password');
     }
 });
 
 // -------------------------------------------------------------
-// REPLIES
+// BALAS PESAN (REPLY)
 // -------------------------------------------------------------
 if (cancelReplyBtn) {
     cancelReplyBtn.onclick = () => {
@@ -158,11 +156,11 @@ function setReplyMessage(msgData) {
 }
 
 // -------------------------------------------------------------
-// TYPING INDICATOR
+// ANIMASI SEDANG MENGETIK
 // -------------------------------------------------------------
 if (messageInput) {
     messageInput.addEventListener('input', () => {
-        socket.emit('typing', { username: currentUsername, isTyping: true });
+        socket.emit('typing', { username: currentUsername, isTyping: messageInput.value.length > 0 });
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => {
             socket.emit('typing', { username: currentUsername, isTyping: false });
@@ -181,7 +179,7 @@ socket.on('display-typing', (data) => {
 });
 
 // -------------------------------------------------------------
-// SEND TEXT
+// KIRIM PESAN TEKS
 // -------------------------------------------------------------
 if (sendBtn) sendBtn.onclick = sendTextMessage;
 if (messageInput) {
@@ -213,7 +211,7 @@ function sendTextMessage() {
 }
 
 // -------------------------------------------------------------
-// RECORDING VN
+// REKAM & KIRIM VOICE NOTE (VN)
 // -------------------------------------------------------------
 if (vnBtn) {
     vnBtn.onclick = async () => {
@@ -248,7 +246,7 @@ if (vnBtn) {
             }, 1000);
 
         } catch (err) {
-            alert('Izin mikrofon ditolak!');
+            alert('Izin penggunaan mikrofon ditolak.');
         }
     };
 }
@@ -282,7 +280,7 @@ function stopRecording(send) {
 }
 
 // -------------------------------------------------------------
-// MEDIA UPLOAD
+// UPLOAD FOTO & VIDEO (DENGAN PROSES INDIKATOR)
 // -------------------------------------------------------------
 if (imageBtn) imageBtn.onclick = () => imageInput.click();
 if (imageInput) {
@@ -306,12 +304,19 @@ function uploadFileWithProgress(file, type) {
     const formData = new FormData();
     formData.append('file', file);
 
+    if (uploadProgress) {
+        uploadProgress.innerText = `Mengirim ${type}...`;
+        uploadProgress.style.display = 'block';
+    }
+
     fetch('/upload', {
         method: 'POST',
         body: formData
     })
     .then(res => res.json())
     .then(data => {
+        if (uploadProgress) uploadProgress.style.display = 'none';
+
         if (data.success && data.fileUrl) {
             const msgData = {
                 id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
@@ -326,13 +331,18 @@ function uploadFileWithProgress(file, type) {
 
             selectedReplyMsg = null;
             if (replyPreview) replyPreview.style.display = 'none';
+        } else {
+            alert('Gagal mengunggah file.');
         }
     })
-    .catch(err => console.error('Gagal mengunggah file:', err));
+    .catch(err => {
+        if (uploadProgress) uploadProgress.style.display = 'none';
+        alert('Terjadi kesalahan koneksi saat mengunggah.');
+    });
 }
 
 // -------------------------------------------------------------
-// RENDER MESSAGES
+// RENDER PESAN & SWIPE BALAS PESAN
 // -------------------------------------------------------------
 socket.on('chat message', (msg) => {
     renderMessage(msg);
@@ -384,20 +394,41 @@ function renderMessage(msg) {
         ${contentHTML}
         <div class="msg-footer">
             <small class="msg-time">${msg.timestamp || ''}</small>
-            <button class="btn-reply-msg" onclick='triggerReply(${JSON.stringify(msg)})'>Balas</button>
         </div>
     `;
+
+    // FITUR SWIPE TO REPLY (Geser pesan ke kanan untuk membalas)
+    let startX = 0;
+    let currentX = 0;
+
+    msgDiv.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    }, { passive: true });
+
+    msgDiv.addEventListener('touchmove', (e) => {
+        currentX = e.touches[0].clientX;
+        let diff = currentX - startX;
+        if (diff > 0 && diff < 80) {
+            msgDiv.style.transform = `translateX(${diff}px)`;
+        }
+    }, { passive: true });
+
+    msgDiv.addEventListener('touchend', () => {
+        let diff = currentX - startX;
+        msgDiv.style.transform = 'translateX(0px)';
+        if (diff > 50) {
+            setReplyMessage(msg);
+        }
+        startX = 0;
+        currentX = 0;
+    });
 
     messagesContainer.appendChild(msgDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-window.triggerReply = function(msg) {
-    setReplyMessage(msg);
-};
-
 // -------------------------------------------------------------
-// DELETE MESSAGES
+// HAPUS PESAN
 // -------------------------------------------------------------
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
@@ -442,4 +473,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-            
+        
