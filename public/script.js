@@ -53,7 +53,13 @@ const imageBtn = document.getElementById('image-btn');
 const imageInput = document.getElementById('image-input');
 const videoBtn = document.getElementById('video-btn');
 const videoInput = document.getElementById('video-input');
-const uploadProgress = document.getElementById('upload-progress');
+const uploadOverlay = document.getElementById('upload-overlay');
+const uploadStatusText = document.getElementById('upload-status-text');
+
+// Media Preview Modal
+const mediaPreviewModal = document.getElementById('media-preview-modal');
+const previewImage = document.getElementById('preview-image');
+const previewVideo = document.getElementById('preview-video');
 
 // Status Online
 socket.on('update-online-count', (count) => {
@@ -113,7 +119,6 @@ socket.on('login-response', (res) => {
         currentUserId = res.userId;
         currentUsername = res.username;
 
-        // Perbarui Header Nama dan ID
         if (headerUserName) headerUserName.innerText = currentUsername;
         if (headerUserId) headerUserId.innerText = `ID: ${currentUserId}`;
 
@@ -265,7 +270,7 @@ function stopRecording(send) {
 
             const audioBlob = new Blob(audioChunks, { type: mimeType });
             const audioFile = new File([audioBlob], `vn-${Date.now()}.${ext}`, { type: mimeType });
-            uploadFileWithProgress(audioFile, 'audio');
+            uploadFileWithProgress(audioFile, 'Voice Note');
         }
         audioChunks = [];
         if (mediaRecorder.stream) {
@@ -282,7 +287,7 @@ if (imageBtn) imageBtn.onclick = () => imageInput.click();
 if (imageInput) {
     imageInput.onchange = (e) => {
         const file = e.target.files[0];
-        if (file) uploadFileWithProgress(file, 'image');
+        if (file) uploadFileWithProgress(file, 'Gambar');
         imageInput.value = '';
     };
 }
@@ -291,18 +296,18 @@ if (videoBtn) videoBtn.onclick = () => videoInput.click();
 if (videoInput) {
     videoInput.onchange = (e) => {
         const file = e.target.files[0];
-        if (file) uploadFileWithProgress(file, 'video');
+        if (file) uploadFileWithProgress(file, 'Video');
         videoInput.value = '';
     };
 }
 
-function uploadFileWithProgress(file, type) {
+function uploadFileWithProgress(file, typeName) {
     const formData = new FormData();
     formData.append('file', file);
 
-    if (uploadProgress) {
-        uploadProgress.innerText = `Mengunggah ${type}...`;
-        uploadProgress.style.display = 'inline-block';
+    if (uploadOverlay) {
+        if (uploadStatusText) uploadStatusText.innerText = `Mengunggah ${typeName}...`;
+        uploadOverlay.style.display = 'flex';
     }
 
     fetch('/upload', {
@@ -311,12 +316,16 @@ function uploadFileWithProgress(file, type) {
     })
     .then(res => res.json())
     .then(data => {
-        if (uploadProgress) uploadProgress.style.display = 'none';
+        if (uploadOverlay) uploadOverlay.style.display = 'none';
 
         if (data.success && data.fileUrl) {
+            let msgType = 'image';
+            if (typeName === 'Video') msgType = 'video';
+            if (typeName === 'Voice Note') msgType = 'audio';
+
             const msgData = {
                 id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                type: type,
+                type: msgType,
                 fileUrl: data.fileUrl,
                 sender: currentUsername || 'User',
                 userId: currentUserId,
@@ -334,10 +343,32 @@ function uploadFileWithProgress(file, type) {
         }
     })
     .catch(err => {
-        if (uploadProgress) uploadProgress.style.display = 'none';
+        if (uploadOverlay) uploadOverlay.style.display = 'none';
         alert('Terjadi kesalahan koneksi.');
     });
 }
+
+// Peninjauan Foto / Video (Lightbox Preview)
+window.openMediaPreview = function(url, type) {
+    if (!mediaPreviewModal) return;
+    if (type === 'image') {
+        previewImage.src = url;
+        previewImage.style.display = 'block';
+        previewVideo.style.display = 'none';
+        previewVideo.pause();
+    } else if (type === 'video') {
+        previewVideo.src = url;
+        previewVideo.style.display = 'block';
+        previewImage.style.display = 'none';
+    }
+    mediaPreviewModal.style.display = 'flex';
+};
+
+window.closeMediaPreview = function() {
+    if (!mediaPreviewModal) return;
+    mediaPreviewModal.style.display = 'none';
+    if (previewVideo) previewVideo.pause();
+};
 
 // Render Messages & Swipe to Reply
 socket.on('chat message', (msg) => {
@@ -372,11 +403,13 @@ function renderMessage(msg) {
 
     let contentHTML = '';
     if (msg.type === 'image') {
-        contentHTML = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 12px;" />`;
+        contentHTML = `<img src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'image')" />`;
     } else if (msg.type === 'video') {
-        contentHTML = `<video src="${msg.fileUrl}" controls playsinline preload="metadata" style="max-width: 100%; border-radius: 12px;"></video>`;
+        contentHTML = `
+            <video src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'video')"></video>
+        `;
     } else if (msg.type === 'audio') {
-        contentHTML = `<audio src="${msg.fileUrl}" controls preload="metadata" style="width: 100%;"></audio>`;
+        contentHTML = `<audio src="${msg.fileUrl}" controls class="chat-vn" preload="metadata"></audio>`;
     } else {
         contentHTML = `<p>${msg.text}</p>`;
     }
@@ -467,4 +500,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-    
+        
