@@ -35,13 +35,21 @@
     <div id="chat-screen" style="display: none;">
         <header class="glass-header">
             <div class="header-card glass">
+                <!-- User Info Lokal -->
                 <div class="user-info-group">
                     <h3 id="header-user-name">Pengguna</h3>
                     <span id="header-user-id" class="user-badge">ID: -</span>
                 </div>
+
+                <!-- DAFTAR PENGGUNA ONLINE (KOTAK-KOTAK GLASS) -->
+                <div class="online-users-container" id="online-users-list">
+                    <!-- Kotak pengguna online akan di-render di sini secara dinamis -->
+                </div>
+
+                <!-- Status Counter -->
                 <div class="status-badge">
                     <span class="status-dot"></span>
-                    <small>Online: <span id="online-count">1</span></small>
+                    <small>Online: <span id="online-count">0</span></small>
                 </div>
             </div>
         </header>
@@ -79,7 +87,7 @@
             </div>
         </div>
 
-        <!-- FOOTER / INPUT CHAT -->
+        <!-- FOOTER INPUT CHAT -->
         <footer class="glass-footer">
             <div class="input-controls">
                 <button type="button" class="icon-btn" id="image-btn" title="Kirim Gambar">📷</button>
@@ -105,7 +113,7 @@
         </div>
     </div>
 
-    <!-- MODAL PENINJAUAN (MEDIA PREVIEW LIGHTBOX) -->
+    <!-- MODAL PREVIEW MEDIA LIGHTBOX -->
     <div id="media-preview-modal" class="modal" style="display: none;" onclick="closeMediaPreview()">
         <span class="close-preview">&times;</span>
         <div class="preview-content-box" onclick="event.stopPropagation()">
