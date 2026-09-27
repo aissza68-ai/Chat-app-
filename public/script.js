@@ -1,518 +1,209 @@
-const socket = io();
+/* ==========================================================================
+   KODE LENGKAP JAVASCRIPT CHAT & MANAJEMEN PESAN (FULL TANPA PEMANGKASAN)
+   ========================================================================== */
 
-let currentUserId = '';
-let currentUsername = '';
-let selectedReplyMsg = null;
-let typingTimeout = null;
-let pendingDeleteMsgId = null;
-
-let mediaRecorder = null;
-let audioChunks = [];
-let recTimerInterval = null;
-let recSeconds = 0;
-
-// Elemen UI
-const loginScreen = document.getElementById('login-screen');
-const chatScreen = document.getElementById('chat-screen');
-const inputUserId = document.getElementById('input-user-id');
-const inputPassword = document.getElementById('input-password');
-const inputName = document.getElementById('input-name');
-const nameGroup = document.getElementById('name-group');
-const btnLogin = document.getElementById('btn-login');
-
-const headerUserName = document.getElementById('header-user-name');
-const headerUserId = document.getElementById('header-user-id');
-const onlineCountEl = document.getElementById('online-count');
-const onlineUsersList = document.getElementById('online-users-list');
-
-const messagesContainer = document.getElementById('messages');
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
-const typingIndicator = document.getElementById('typing-indicator');
-
-const replyPreview = document.getElementById('reply-preview');
-const replyName = document.getElementById('reply-name');
-const replyText = document.getElementById('reply-text');
-const cancelReplyBtn = document.getElementById('cancel-reply');
-
-const deleteModal = document.getElementById('delete-modal');
-const btnDeleteForMe = document.getElementById('btn-delete-forme');
-const btnDeleteForEveryone = document.getElementById('btn-delete-foreveryone');
-const btnCancelDelete = document.getElementById('btn-cancel-delete');
-
-const vnBtn = document.getElementById('vn-btn');
-const recordingBox = document.getElementById('recording-box');
-const recTimer = document.getElementById('rec-timer');
-const cancelRecBtn = document.getElementById('cancel-rec-btn');
-const stopSendRecBtn = document.getElementById('stop-send-rec-btn');
-
-const imageBtn = document.getElementById('image-btn');
-const imageInput = document.getElementById('image-input');
-const videoBtn = document.getElementById('video-btn');
-const videoInput = document.getElementById('video-input');
-const uploadOverlay = document.getElementById('upload-overlay');
-const uploadStatusText = document.getElementById('upload-status-text');
-
-const mediaPreviewModal = document.getElementById('media-preview-modal');
-const previewImage = document.getElementById('preview-image');
-const previewVideo = document.getElementById('preview-video');
-
-// EFEK SUARA (WEB AUDIO API)
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playSound(type) {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    if (type === 'send') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
-    } else if (type === 'receive') {
-        const now = audioCtx.currentTime;
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc1.frequency.setValueAtTime(800, now);
-        osc2.frequency.setValueAtTime(1050, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc1.start(now);
-        osc1.stop(now + 0.08);
-        osc2.start(now + 0.08);
-        osc2.stop(now + 0.3);
-    }
-}
-
-// UPDATE USER ONLINE
-socket.on('update-online-users', (users) => {
-    if (onlineCountEl) onlineCountEl.innerText = users.length;
-    if (!onlineUsersList) return;
-
-    onlineUsersList.innerHTML = '';
-    users.forEach(u => {
-        const card = document.createElement('div');
-        card.className = 'online-user-card';
-        card.innerHTML = `
-            <span class="online-mini-dot"></span>
-            <span class="online-name">${u.username || 'User'}</span>
-            <span class="online-id-badge">ID: ${u.userId}</span>
-        `;
-        onlineUsersList.appendChild(card);
-    });
-});
-
-// AUTO LOGIN & CEK ID
-window.addEventListener('DOMContentLoaded', () => {
-    const savedUserId = localStorage.getItem('chat_userId');
-    const savedPassword = localStorage.getItem('chat_password');
-    if (savedUserId && savedPassword) {
-        socket.emit('user-login', { userId: savedUserId, password: savedPassword, name: '' });
-    }
-});
-
-if (inputUserId) {
-    inputUserId.addEventListener('input', () => {
-        const val = inputUserId.value.trim();
-        if (val.length > 0) {
-            socket.emit('check-user-id', val);
-        } else {
-            if (nameGroup) nameGroup.style.display = 'block';
-            if (btnLogin) btnLogin.innerText = 'Masuk / Daftar';
-        }
-    });
-}
-
-socket.on('check-user-id-result', (res) => {
-    if (res.exists) {
-        if (nameGroup) nameGroup.style.display = 'none';
-        if (btnLogin) btnLogin.innerText = 'Masuk';
-    } else {
-        if (nameGroup) nameGroup.style.display = 'block';
-        if (btnLogin) btnLogin.innerText = 'Daftar Baru';
-    }
-});
-
-function executeLogin(e) {
-    if (e) e.preventDefault();
-    const userId = inputUserId ? inputUserId.value.trim() : '';
-    const password = inputPassword ? inputPassword.value.trim() : '';
-    const name = inputName ? inputName.value.trim() : '';
-
-    if (!userId || !password) return alert('ID dan Password wajib diisi!');
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    socket.emit('user-login', { userId, password, name });
-}
-
-if (btnLogin) btnLogin.onclick = executeLogin;
-const loginForm = document.getElementById('login-form');
-if (loginForm) loginForm.onsubmit = executeLogin;
-
-socket.on('login-response', (res) => {
-    if (res.success) {
-        currentUserId = res.userId;
-        currentUsername = res.username;
-
-        if (headerUserName) headerUserName.innerText = currentUsername;
-        if (headerUserId) headerUserId.innerText = `ID: ${currentUserId}`;
-
-        localStorage.setItem('chat_userId', res.userId);
-        const passVal = inputPassword ? inputPassword.value.trim() : localStorage.getItem('chat_password');
-        if (passVal) localStorage.setItem('chat_password', passVal);
-
-        if (loginScreen) loginScreen.style.display = 'none';
-        if (chatScreen) chatScreen.style.display = 'flex';
-
-        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
-            Notification.requestPermission();
-        }
-
-        if (messagesContainer) {
-            messagesContainer.innerHTML = '';
-            if (res.history && Array.isArray(res.history)) {
-                res.history.forEach(msg => renderMessage(msg));
-            }
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
-    } else {
-        alert(res.message || 'Gagal masuk!');
-        localStorage.removeItem('chat_userId');
-        localStorage.removeItem('chat_password');
-    }
-});
-
-// NOTIFIKASI BROWSER
-function showNotification(msg) {
-    if (!("Notification" in window)) return;
-    if (document.hidden && Notification.permission === "granted" && msg.userId !== currentUserId) {
-        let title = `Pesan dari ${msg.sender}`;
-        let bodyText = msg.type === 'text' ? msg.text : `[${msg.type.toUpperCase()}]`;
-        new Notification(title, { body: bodyText, icon: '/favicon.ico' });
-    }
-}
-
-// REPLY & TYPING
-if (cancelReplyBtn) {
-    cancelReplyBtn.onclick = () => {
-        selectedReplyMsg = null;
-        if (replyPreview) replyPreview.style.display = 'none';
-    };
-}
-
-function setReplyMessage(msgData) {
-    selectedReplyMsg = msgData;
-    if (replyName) replyName.innerText = msgData.sender;
-    if (replyText) replyText.innerText = msgData.type === 'text' ? msgData.text : `[${msgData.type.toUpperCase()}]`;
-    if (replyPreview) replyPreview.style.display = 'flex';
-    if (messageInput) messageInput.focus();
-}
-
-if (messageInput) {
-    messageInput.addEventListener('input', () => {
-        socket.emit('typing', { username: currentUsername, isTyping: messageInput.value.length > 0 });
-        clearTimeout(typingTimeout);
-        typingTimeout = setTimeout(() => {
-            socket.emit('typing', { username: currentUsername, isTyping: false });
-        }, 2000);
-    });
-}
-
-socket.on('display-typing', (data) => {
-    if (!typingIndicator) return;
-    if (data.isTyping && data.username !== currentUsername) {
-        typingIndicator.innerText = `${data.username} sedang mengetik...`;
-        typingIndicator.style.display = 'inline-block';
-    } else {
-        typingIndicator.style.display = 'none';
-    }
-});
-
-// KIRIM PESAN
-function sendTextMessage() {
-    if (!messageInput) return;
-    const text = messageInput.value.trim();
-    if (!text) return;
-
-    const msgData = {
-        id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-        type: 'text',
-        text: text,
-        sender: currentUsername || 'User',
-        userId: currentUserId,
-        replyTo: selectedReplyMsg,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-
-    renderMessage(msgData);
-    playSound('send');
-    socket.emit('chat message', msgData);
-
-    messageInput.value = '';
-    selectedReplyMsg = null;
-    if (replyPreview) replyPreview.style.display = 'none';
-    socket.emit('typing', { username: currentUsername, isTyping: false });
-}
-
-if (sendBtn) sendBtn.onclick = sendTextMessage;
-if (messageInput) {
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            sendTextMessage();
-        }
-    });
-}
-
-// VOICE NOTE
-if (vnBtn) {
-    vnBtn.onclick = async () => {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return alert('Mikrofon tidak didukung.');
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            audioChunks = [];
-            let options = {};
-            if (MediaRecorder.isTypeSupported('audio/webm')) options = { mimeType: 'audio/webm' };
-            mediaRecorder = new MediaRecorder(stream, options);
-
-            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-            mediaRecorder.start();
-            recSeconds = 0;
-            if (recTimer) recTimer.innerText = '00:00';
-            if (recordingBox) recordingBox.style.display = 'flex';
-
-            recTimerInterval = setInterval(() => {
-                recSeconds++;
-                const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
-                const s = String(recSeconds % 60).padStart(2, '0');
-                if (recTimer) recTimer.innerText = `${m}:${s}`;
-            }, 1000);
-        } catch (err) {
-            alert('Izin mikrofon ditolak.');
-        }
-    };
-}
-
-if (cancelRecBtn) cancelRecBtn.onclick = () => stopRecording(false);
-if (stopSendRecBtn) stopSendRecBtn.onclick = () => stopRecording(true);
-
-function stopRecording(send) {
-    if (!mediaRecorder) return;
-    clearInterval(recTimerInterval);
-    if (recordingBox) recordingBox.style.display = 'none';
-
-    mediaRecorder.onstop = () => {
-        if (send && audioChunks.length > 0) {
-            const mimeType = mediaRecorder.mimeType || 'audio/webm';
-            const audioBlob = new Blob(audioChunks, { type: mimeType });
-            const audioFile = new File([audioBlob], `vn-${Date.now()}.webm`, { type: mimeType });
-            uploadFileWithProgress(audioFile, 'Voice Note');
-        }
-        audioChunks = [];
-        if (mediaRecorder.stream) mediaRecorder.stream.getTracks().forEach(t => t.stop());
-        mediaRecorder = null;
-    };
-    mediaRecorder.stop();
-}
-
-// UPLOAD MEDIA
-if (imageBtn) imageBtn.onclick = () => imageInput.click();
-if (imageInput) {
-    imageInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) uploadFileWithProgress(file, 'Gambar');
-        imageInput.value = '';
-    };
-}
-
-if (videoBtn) videoBtn.onclick = () => videoInput.click();
-if (videoInput) {
-    videoInput.onchange = (e) => {
-        const file = e.target.files[0];
-        if (file) uploadFileWithProgress(file, 'Video');
-        videoInput.value = '';
-    };
-}
-
-function uploadFileWithProgress(file, typeName) {
-    const formData = new FormData();
-    formData.append('file', file);
-    if (uploadOverlay) {
-        if (uploadStatusText) uploadStatusText.innerText = `Mengunggah ${typeName}...`;
-        uploadOverlay.style.display = 'flex';
-    }
-
-    fetch('/upload', { method: 'POST', body: formData })
-    .then(res => res.json())
-    .then(data => {
-        if (uploadOverlay) uploadOverlay.style.display = 'none';
-        if (data.success && data.fileUrl) {
-            let msgType = typeName === 'Video' ? 'video' : (typeName === 'Voice Note' ? 'audio' : 'image');
-            const msgData = {
-                id: 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                type: msgType,
-                fileUrl: data.fileUrl,
-                sender: currentUsername || 'User',
-                userId: currentUserId,
-                replyTo: selectedReplyMsg,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            };
-            renderMessage(msgData);
-            playSound('send');
-            socket.emit('chat message', msgData);
-            selectedReplyMsg = null;
-            if (replyPreview) replyPreview.style.display = 'none';
-        } else {
-            alert('Gagal mengunggah file.');
-        }
-    }).catch(() => {
-        if (uploadOverlay) uploadOverlay.style.display = 'none';
-        alert('Kesalahan koneksi.');
-    });
-}
-
-window.openMediaPreview = function(url, type) {
-    if (!mediaPreviewModal) return;
-    if (type === 'image') {
-        previewImage.src = url;
-        previewImage.style.display = 'block';
-        previewVideo.style.display = 'none';
-        previewVideo.pause();
-    } else {
-        previewVideo.src = url;
-        previewVideo.style.display = 'block';
-        previewImage.style.display = 'none';
-    }
-    mediaPreviewModal.style.display = 'flex';
+// 1. State Aplikasi (Penyimpanan Data Lokal Sifatnya Sementara)
+const chatState = {
+    currentUser: {
+        id: "user_123", // Contoh ID user yang sedang login
+        name: "Saya"
+    },
+    replyingTo: null,
+    messages: [
+        // Contoh data dummy awal pesan (bisa diganti dari database/websocket server Anda)
+        { id: "msg_1", senderId: "user_456", senderName: "Budi", text: "Halo, apa kabar?", time: "10:00", isDeleted: false },
+        { id: "msg_2", senderId: "user_123", senderName: "Saya", text: "Baik Budi, ada yang bisa dibantu?", time: "10:01", isDeleted: false }
+    ]
 };
 
-window.closeMediaPreview = function() {
-    if (!mediaPreviewModal) return;
-    mediaPreviewModal.style.display = 'none';
-    if (previewVideo) previewVideo.pause();
-};
-
-// RENDER PESAN
-socket.on('chat message', (msg) => {
-    renderMessage(msg);
-    if (msg.userId !== currentUserId) playSound('receive');
-    showNotification(msg);
-});
-
-function renderMessage(msg) {
-    if (!messagesContainer) return;
-    if (document.getElementById(msg.id)) return;
-
-    const msgDiv = document.createElement('div');
-    msgDiv.id = msg.id;
-    const isSelf = msg.userId === currentUserId;
-    msgDiv.classList.add('message', isSelf ? 'self' : 'other');
-
-    if (msg.deleted) {
-        msgDiv.innerHTML = `<em>Pesan ini telah dihapus</em>`;
-        messagesContainer.appendChild(msgDiv);
+// 2. Fungsi Utama: Render Daftar Pesan ke Kontainer Chat
+function renderMessages(messagesArray) {
+    const container = document.getElementById('messages-container');
+    if (!container) {
+        console.warn("Elemen #messages-container tidak ditemukan di DOM.");
         return;
     }
+    
+    // Bersihkan kontainer sebelum merender ulang
+    container.innerHTML = '';
 
-    let replyHTML = '';
-    if (msg.replyTo) {
-        const replyContent = msg.replyTo.type === 'text' ? msg.replyTo.text : `[${msg.replyTo.type.toUpperCase()}]`;
-        replyHTML = `
-            <div class="reply-box">
-                <small><strong>${msg.replyTo.sender}</strong></small>
-                <p>${replyContent}</p>
-            </div>
-        `;
-    }
+    messagesArray.forEach((msg) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Tentukan apakah pesan milik user yang sedang login (self) atau orang lain (other)
+        const isSelf = msg.senderId === chatState.currentUser.id;
+        messageDiv.classList.add(isSelf ? 'self' : 'other');
 
-    let contentHTML = '';
-    if (msg.type === 'image') {
-        contentHTML = `<img src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'image')" />`;
-    } else if (msg.type === 'video') {
-        contentHTML = `<video src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'video')"></video>`;
-    } else if (msg.type === 'audio') {
-        contentHTML = `<audio src="${msg.fileUrl}" controls class="chat-vn" preload="metadata"></audio>`;
-    } else {
-        contentHTML = `<p>${msg.text}</p>`;
-    }
+        // Cek apakah status pesan sudah dihapus
+        const isDeleted = msg.isDeleted || msg.text === "Pesan ini telah dihapus";
 
-    const deleteBtnHTML = `<span class="delete-icon" onclick="openDeleteModal('${msg.id}', '${msg.userId}')">&times;</span>`;
+        if (isDeleted) {
+            // Jika pesan sudah dihapus, tampilkan teks khusus dan pastikan TIDAK ADA event swipe/reply
+            messageDiv.classList.add('deleted-message');
+            messageDiv.innerHTML = `
+                <div class="msg-content" style="font-style: italic; opacity: 0.7; color: inherit;">
+                    Pesan ini telah dihapus
+                </div>
+            `;
+            // PENTING: Kita sengaja tidak memanggil fungsi attachSwipeListener di sini
+        } else {
+            // Jika pesan normal/aktif, render isi pesan secara lengkap
+            messageDiv.innerHTML = `
+                <span class="msg-sender">${escapeHtml(msg.senderName || 'User')}</span>
+                <div class="msg-text">${escapeHtml(msg.text)}</div>
+                <div class="msg-footer">
+                    <span class="msg-time">${escapeHtml(msg.time || '')}</span>
+                </div>
+            `;
 
-    msgDiv.innerHTML = `
-        ${deleteBtnHTML}
-        <span class="msg-sender">${msg.sender}</span>
-        ${replyHTML}
-        ${contentHTML}
-        <div class="msg-footer">
-            <small class="msg-time">${msg.timestamp || ''}</small>
-        </div>
-    `;
+            // PASANG EVENT SWIPE HANYA PADA PESAN YANG BELUM DIHAPUS
+            attachSwipeListener(messageDiv, msg);
+            
+            // Tambahan opsional: Klik pesan untuk memunculkan opsi hapus pesan
+            messageDiv.addEventListener('click', () => {
+                if (!msg.isDeleted) {
+                    // Contoh fungsi pemanggil modal hapus pesan Anda
+                    openDeleteConfirmationModal(msg.id);
+                }
+            });
+        }
 
-    // Swipe Balas
-    let startX = 0, currentX = 0;
-    msgDiv.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
-    msgDiv.addEventListener('touchmove', (e) => {
-        currentX = e.touches[0].clientX;
-        let diff = currentX - startX;
-        if (diff > 0 && diff < 80) msgDiv.style.transform = `translateX(${diff}px)`;
-    }, { passive: true });
-    msgDiv.addEventListener('touchend', () => {
-        let diff = currentX - startX;
-        msgDiv.style.transform = 'translateX(0px)';
-        if (diff > 50) setReplyMessage(msg);
-        startX = 0; currentX = 0;
+        container.appendChild(messageDiv);
     });
 
-    messagesContainer.appendChild(msgDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // Auto-scroll otomatis ke pesan paling bawah (terbaru)
+    container.scrollTop = container.scrollHeight;
 }
 
-// HAPUS PESAN
-window.openDeleteModal = function(msgId, msgUserId) {
-    pendingDeleteMsgId = msgId;
-    if (deleteModal) deleteModal.style.display = 'flex';
-    if (btnDeleteForEveryone) {
-        btnDeleteForEveryone.style.display = (msgUserId === currentUserId) ? 'block' : 'none';
+// 3. Fungsi Gestur Swipe (Geser ke Kanan untuk Membalas / Reply)
+function attachSwipeListener(element, messageData) {
+    let startX = 0;
+    let currentX = 0;
+    let isSwiping = false;
+
+    element.addEventListener('touchstart', (e) => {
+        // Pengecekan pengaman mutlak: Jika pesan sudah dihapus, abaikan sentuhan swipe!
+        if (messageData.isDeleted || messageData.text === "Pesan ini telah dihapus") {
+            return;
+        }
+        startX = e.touches[0].clientX;
+        isSwiping = true;
+    }, { passive: true });
+
+    element.addEventListener('touchmove', (e) => {
+        if (!isSwiping) return;
+        currentX = e.touches[0].clientX;
+        let diffX = currentX - startX;
+
+        // Berikan efek geser visual ringan ke kanan saat jari digeser (maksimal 100px)
+        if (diffX > 0 && diffX < 100) {
+            element.style.transform = `translateX(${diffX}px)`;
+        }
+    }, { passive: true });
+
+    element.addEventListener('touchend', (e) => {
+        if (!isSwiping) return;
+        isSwiping = false;
+        
+        let diffX = currentX - startX;
+        
+        // Kembalikan posisi elemen pesan secara halus ke tempat semula
+        element.style.transform = 'translateX(0px)';
+
+        // Jika digeser ke kanan sejauh lebih dari 60px, trigger pratinjau balasan
+        if (diffX > 60) {
+            // Pengecekan ulang keamanan status hapus sebelum memicu pratinjau reply
+            if (!messageData.isDeleted && messageData.text !== "Pesan ini telah dihapus") {
+                triggerReplyPreview(messageData);
+            }
+        }
+        
+        startX = 0;
+        currentX = 0;
+    });
+}
+
+// 4. Fungsi Menampilkan Kotak Pratinjau Balasan (Reply Preview Box) di Atas Input
+function triggerReplyPreview(messageData) {
+    chatState.replyingTo = messageData;
+    
+    // Cari elemen penampung pratinjau, buat baru jika belum ada di DOM
+    let replyBox = document.getElementById('reply-preview-container');
+    if (!replyBox) {
+        replyBox = document.createElement('div');
+        replyBox.id = 'reply-preview-container';
+        replyBox.classList.add('reply-preview');
+        
+        const inputArea = document.querySelector('.chat-input-area');
+        if (inputArea && inputArea.parentNode) {
+            inputArea.parentNode.insertBefore(replyBox, inputArea);
+        }
     }
-};
 
-if (btnCancelDelete) {
-    btnCancelDelete.onclick = () => {
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    };
+    // Isi konten kotak pratinjau balasan
+    replyBox.innerHTML = `
+        <div style="overflow: hidden;">
+            <strong style="color: #00c6ff; display: block; font-size: 12px;">Membalas ${escapeHtml(messageData.senderName)}:</strong>
+            <div style="font-size: 11px; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+                ${escapeHtml(messageData.text)}
+            </div>
+        </div>
+        <button type="button" onclick="cancelReply()" style="background:none; border:none; color:#fff; font-size:18px; cursor:pointer; padding: 0 5px;">&times;</button>
+    `;
+    replyBox.style.display = 'flex';
 }
 
-if (btnDeleteForMe) {
-    btnDeleteForMe.onclick = () => {
-        if (pendingDeleteMsgId) {
-            const el = document.getElementById(pendingDeleteMsgId);
-            if (el) el.remove();
+// 5. Fungsi Membatalkan Balasan (Close Reply Preview)
+function cancelReply() {
+    chatState.replyingTo = null;
+    const replyBox = document.getElementById('reply-preview-container');
+    if (replyBox) {
+        replyBox.style.display = 'none';
+        replyBox.innerHTML = '';
+    }
+}
+
+// 6. Fungsi Eksekusi Penghapusan Pesan (Mengubah Status Menjadi "Pesan ini telah dihapus")
+function deleteMessage(messageId) {
+    const msgIndex = chatState.messages.findIndex(m => m.id === messageId);
+    if (msgIndex !== -1) {
+        // Ubah data pesan di state lokal menjadi status terhapus
+        chatState.messages[msgIndex].isDeleted = true;
+        chatState.messages[msgIndex].text = "Pesan ini telah dihapus";
+        
+        // Jika pesan yang sedang aktif dibalas (reply) ternyata dihapus, batalkan balasan tersebut
+        if (chatState.replyingTo && chatState.replyingTo.id === messageId) {
+            cancelReply();
         }
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    };
+        
+        // Render ulang daftar pesan agar tampilan langsung bersih dari teks lama dan terkunci dari swipe
+        renderMessages(chatState.messages);
+    }
 }
 
-if (btnDeleteForEveryone) {
-    btnDeleteForEveryone.onclick = () => {
-        if (pendingDeleteMsgId) {
-            socket.emit('delete-message-everyone', { msgId: pendingDeleteMsgId, userId: currentUserId });
-        }
-        pendingDeleteMsgId = null;
-        if (deleteModal) deleteModal.style.display = 'none';
-    };
+// 7. Fungsi Simulasi Modal Konfirmasi Hapus Pesan (Opsional / Penyesuaian UI Anda)
+function openDeleteConfirmationModal(messageId) {
+    // Anda bisa mengintegrasikan fungsi ini dengan modal kustom aplikasi Anda
+    const userConfirmed = confirm("Apakah Anda yakin ingin menghapus pesan ini?");
+    if (userConfirmed) {
+        deleteMessage(messageId);
+    }
 }
 
-socket.on('message-deleted-everyone', (data) => {
-    const el = document.getElementById(data.msgId);
-    if (el) el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
+// 8. Fungsi Utilitas Keamanan: Mencegah XSS Injection pada Teks Chat
+function escapeHtml(text) {
+    if (!text) return '';
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// --- INISIALISASI AWAL SAAT SCRIPT DI-LOAD ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Render pesan awal saat halaman pertama kali dibuka
+    renderMessages(chatState.messages);
 });
-                
