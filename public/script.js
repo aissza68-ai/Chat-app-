@@ -21,49 +21,43 @@ function sendMessage() {
     messagesContainer.appendChild(messageDiv);
     inputField.value = "";
     
-    // Auto Scroll ke bawah dengan animasi halus
+    // Auto Scroll ke bawah
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     // Perbarui preview chat di sidebar
     document.getElementById("preview-msg").innerText = "Anda: " + messageText;
     document.getElementById("last-time").innerText = currentTime;
 
-    // Simulasi Anggota Grup Lain Membalas Pesan Secara Otomatis
+    // Simulasi Anggota Grup Lain Membalas
     triggerGroupAutoReply(messageText);
 }
 
-// Enter key trigger
+// Tombol Enter pada Keyboard
 function handleKeyPress(event) {
     if (event.key === "Enter") {
         sendMessage();
     }
 }
 
-// Simulasi Anggota Grup Lain Mengetik & Membalas
+// Simulasi Anggota Grup Mengetik & Membalas Otomatis
 function triggerGroupAutoReply(userMsg) {
     const typingIndicator = document.getElementById("typing-indicator");
     const messagesContainer = document.getElementById("messages-container");
 
-    // Daftar nama anggota acak di grup
     const members = [
-        { name: "Siti Developer", avatar: "https://i.pravatar.cc/150?img=44" },
-        { name: "Andi Developer", avatar: "https://i.pravatar.cc/150?img=11" },
-        { name: "Sinta UI", avatar: "https://i.pravatar.cc/150?img=25" }
+        { name: "Siti Developer" },
+        { name: "Andi Developer" },
+        { name: "Sinta UI" }
     ];
     
-    // Pilih anggota secara acak
     const randomMember = members[Math.floor(Math.random() * members.length)];
-    
-    // Ubah teks indikator dengan nama anggota yang sedang mengetik
-    typingIndicator.querySelector("i").innerText = `${randomMember.name} sedang mengetik...`;
+    document.getElementById("typing-text").innerText = `${randomMember.name} sedang mengetik...`;
 
-    // Tampilkan indikator mengetik setelah 1 detik
     setTimeout(() => {
         typingIndicator.style.display = "flex";
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }, 1000);
 
-    // Hilangkan indikator dan tampilkan balasan setelah 3 detik
     setTimeout(() => {
         typingIndicator.style.display = "none";
         
@@ -71,7 +65,6 @@ function triggerGroupAutoReply(userMsg) {
         const replyDiv = document.createElement("div");
         replyDiv.classList.add("message", "incoming");
         
-        // Respon dinamis sederhana berdasarkan teks user
         let replyText = "Setuju dengan itu! Keren banget pembahasannya.";
         if (userMsg.toLowerCase().includes("halo") || userMsg.toLowerCase().includes("hi")) {
             replyText = "Halo juga! Ada yang bisa dibantu terkait kodenya?";
@@ -90,14 +83,12 @@ function triggerGroupAutoReply(userMsg) {
         messagesContainer.appendChild(replyDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
         
-        // Perbarui preview chat di sidebar
         document.getElementById("preview-msg").innerText = `${randomMember.name}: ${replyText}`;
         document.getElementById("last-time").innerText = currentTime;
 
     }, 3500);
 }
 
-// Fungsi Keamanan Sederhana untuk Mencegah XSS
 function escapeHTML(str) {
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
@@ -105,9 +96,13 @@ function escapeHTML(str) {
 }
 
 function sendAttachment() {
-    alert("Simulasi: Panel unggah foto/dokumen grup dibuka!");
+    alert("Simulasi: Panel unggah file grup dibuka.");
 }
 
 function toggleGroupInfo() {
     alert("Informasi Grup: Grup Developer AI memiliki 5 anggota aktif.");
+}
+
+function switchChat(chatName) {
+    // Fungsi pindah chat jika nanti ditambahkan chat lain
 }
