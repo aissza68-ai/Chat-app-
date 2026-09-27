@@ -14,17 +14,16 @@ const io = new Server(server, {
     maxHttpBufferSize: 1e8 // Limit 100MB
 });
 
-// Database Persisten NeDB (File lokal stabil tanpa butuh kompiler C++)
+// Database Persisten NeDB
 const dbUsers = Datastore.create({ filename: path.join(__dirname, 'users.db'), autoload: true });
 const dbMessages = Datastore.create({ filename: path.join(__dirname, 'messages.db'), autoload: true });
 
-// Pastikan Folder Upload Ada
+// Folder Upload
 const uploadDir = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Konfigurasi Multer
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
@@ -39,20 +38,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(uploadDir));
 
-// Route Upload File (VN / Gambar / Video)
+// Route Upload File
 app.post('/upload', upload.single('file'), (req, res) => {
-    if (!req.file) return res.status(400).json({ success: false, message: 'File tidak ditemukan' });
+    if (!req.file) return res.status(400).json({ success: false, message: 'File gagal terunggah' });
     res.json({ success: true, fileUrl: `/uploads/${req.file.filename}` });
 });
 
-// Status Online Counter
-let onlineCount = 0;
+// Counter User Online
+let activeSockets = new Set();
 
 io.on('connection', (socket) => {
-    onlineCount++;
-    io.emit('update-online-count', onlineCount);
+    activeSockets.add(socket.id);
+    io.emit('update-online-count', activeSockets.size);
 
-    // Cek ketersediaan User ID
+    // Cek User ID
     socket.on('check-user-id', async (userId) => {
         try {
             const user = await dbUsers.findOne({ userId });
@@ -62,7 +61,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Login & Auto Register
+    // Login & Register
     socket.on('user-login', async (data) => {
         const { userId, password, name } = data;
         if (!userId || !password) {
@@ -73,7 +72,6 @@ io.on('connection', (socket) => {
             let user = await dbUsers.findOne({ userId });
 
             if (!user) {
-                // Pendaftaran Akun Baru
                 const username = name || ('User ' + userId);
                 user = { userId, password, name: username };
                 await dbUsers.insert(user);
@@ -81,7 +79,6 @@ io.on('connection', (socket) => {
                 return socket.emit('login-response', { success: false, message: 'Password salah!' });
             }
 
-            // Ambil Seluruh Riwayat Pesan
             const history = await dbMessages.find({}).sort({ createdAt: 1 });
 
             socket.emit('login-response', {
@@ -91,11 +88,11 @@ io.on('connection', (socket) => {
                 history: history
             });
         } catch (err) {
-            socket.emit('login-response', { success: false, message: 'Terjadi kesalahan sistem!' });
+            socket.emit('login-response', { success: false, message: 'Terjadi kesalahan sistem server!' });
         }
     });
 
-    // Kirim & Simpan Pesan
+    // Kirim Pesan
     socket.on('chat message', async (msg) => {
         try {
             msg.createdAt = Date.now();
@@ -106,12 +103,12 @@ io.on('connection', (socket) => {
         }
     });
 
-    // Indikator Mengetik
+    // Status Mengetik
     socket.on('typing', (data) => {
         socket.broadcast.emit('display-typing', data);
     });
 
-    // Hapus Pesan untuk Semua Orang
+    // Hapus Pesan Semua Orang
     socket.on('delete-message-everyone', async (data) => {
         try {
             await dbMessages.update({ id: data.msgId }, { $set: { deleted: true } });
@@ -121,15 +118,14 @@ io.on('connection', (socket) => {
         }
     });
 
-    // User Disconnect
+    // Disconnect
     socket.on('disconnect', () => {
-        onlineCount = Math.max(0, onlineCount - 1);
-        io.emit('update-online-count', onlineCount);
+        activeSockets.delete(socket.id);
+        io.emit('update-online-count', activeSockets.size);
     });
 });
 
-// Port Railway
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server berjalan di port ${PORT}`);
+    console.log(`Server aktif pada port ${PORT}`);
 });
