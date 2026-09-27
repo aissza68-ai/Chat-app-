@@ -1,4 +1,3 @@
-// Inisialisasi Socket.IO dengan fallback transport agar stabil di Railway
 const socket = io({
     transports: ['websocket', 'polling'],
     reconnection: true,
@@ -17,7 +16,7 @@ let audioChunks = [];
 let recTimerInterval = null;
 let recSeconds = 0;
 
-// Ambil Element UI
+// Element UI
 const loginScreen = document.getElementById('login-screen');
 const chatScreen = document.getElementById('chat-screen');
 const inputUserId = document.getElementById('input-user-id');
@@ -26,6 +25,8 @@ const inputName = document.getElementById('input-name');
 const nameGroup = document.getElementById('name-group');
 const btnLogin = document.getElementById('btn-login');
 
+const headerUserName = document.getElementById('header-user-name');
+const headerUserId = document.getElementById('header-user-id');
 const onlineCountEl = document.getElementById('online-count');
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('message-input');
@@ -54,18 +55,12 @@ const videoBtn = document.getElementById('video-btn');
 const videoInput = document.getElementById('video-input');
 const uploadProgress = document.getElementById('upload-progress');
 
-// -------------------------------------------------------------
-// STATUS ONLINE
-// -------------------------------------------------------------
+// Status Online
 socket.on('update-online-count', (count) => {
-    if (onlineCountEl) {
-        onlineCountEl.innerText = count;
-    }
+    if (onlineCountEl) onlineCountEl.innerText = count;
 });
 
-// -------------------------------------------------------------
-// AUTO LOGIN & LOGIN HANDLER
-// -------------------------------------------------------------
+// Auto Login & Checking
 window.addEventListener('DOMContentLoaded', () => {
     const savedUserId = localStorage.getItem('chat_userId');
     const savedPassword = localStorage.getItem('chat_password');
@@ -118,6 +113,10 @@ socket.on('login-response', (res) => {
         currentUserId = res.userId;
         currentUsername = res.username;
 
+        // Perbarui Header Nama dan ID
+        if (headerUserName) headerUserName.innerText = currentUsername;
+        if (headerUserId) headerUserId.innerText = `ID: ${currentUserId}`;
+
         localStorage.setItem('chat_userId', res.userId);
         const passVal = inputPassword ? inputPassword.value.trim() : localStorage.getItem('chat_password');
         if (passVal) localStorage.setItem('chat_password', passVal);
@@ -139,9 +138,7 @@ socket.on('login-response', (res) => {
     }
 });
 
-// -------------------------------------------------------------
-// BALAS PESAN / REPLIES
-// -------------------------------------------------------------
+// Reply Preview
 if (cancelReplyBtn) {
     cancelReplyBtn.onclick = () => {
         selectedReplyMsg = null;
@@ -157,9 +154,7 @@ function setReplyMessage(msgData) {
     if (messageInput) messageInput.focus();
 }
 
-// -------------------------------------------------------------
-// TYPING INDICATOR
-// -------------------------------------------------------------
+// Typing Status
 if (messageInput) {
     messageInput.addEventListener('input', () => {
         socket.emit('typing', { username: currentUsername, isTyping: messageInput.value.length > 0 });
@@ -174,15 +169,13 @@ socket.on('display-typing', (data) => {
     if (!typingIndicator) return;
     if (data.isTyping && data.username !== currentUsername) {
         typingIndicator.innerText = `${data.username} sedang mengetik...`;
-        typingIndicator.style.display = 'block';
+        typingIndicator.style.display = 'inline-block';
     } else {
         typingIndicator.style.display = 'none';
     }
 });
 
-// -------------------------------------------------------------
-// KIRIM PESAN TEKS
-// -------------------------------------------------------------
+// Send Text Message
 function sendTextMessage() {
     if (!messageInput) return;
     const text = messageInput.value.trim();
@@ -198,10 +191,7 @@ function sendTextMessage() {
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    // Tampilkan langsung di browser pengirim
     renderMessage(msgData);
-
-    // Kirim ke server
     socket.emit('chat message', msgData);
 
     messageInput.value = '';
@@ -220,9 +210,7 @@ if (messageInput) {
     });
 }
 
-// -------------------------------------------------------------
-// REKAM & KIRIM VN
-// -------------------------------------------------------------
+// Voice Note Recording
 if (vnBtn) {
     vnBtn.onclick = async () => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -289,9 +277,7 @@ function stopRecording(send) {
     mediaRecorder.stop();
 }
 
-// -------------------------------------------------------------
-// UPLOAD FOTO & VIDEO
-// -------------------------------------------------------------
+// Media Upload
 if (imageBtn) imageBtn.onclick = () => imageInput.click();
 if (imageInput) {
     imageInput.onchange = (e) => {
@@ -316,7 +302,7 @@ function uploadFileWithProgress(file, type) {
 
     if (uploadProgress) {
         uploadProgress.innerText = `Mengunggah ${type}...`;
-        uploadProgress.style.display = 'block';
+        uploadProgress.style.display = 'inline-block';
     }
 
     fetch('/upload', {
@@ -353,9 +339,7 @@ function uploadFileWithProgress(file, type) {
     });
 }
 
-// -------------------------------------------------------------
-// Menerima Pesan dari Server
-// -------------------------------------------------------------
+// Render Messages & Swipe to Reply
 socket.on('chat message', (msg) => {
     renderMessage(msg);
 });
@@ -388,9 +372,9 @@ function renderMessage(msg) {
 
     let contentHTML = '';
     if (msg.type === 'image') {
-        contentHTML = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 8px;" />`;
+        contentHTML = `<img src="${msg.fileUrl}" style="max-width: 100%; border-radius: 12px;" />`;
     } else if (msg.type === 'video') {
-        contentHTML = `<video src="${msg.fileUrl}" controls playsinline preload="metadata" style="max-width: 100%; border-radius: 8px;"></video>`;
+        contentHTML = `<video src="${msg.fileUrl}" controls playsinline preload="metadata" style="max-width: 100%; border-radius: 12px;"></video>`;
     } else if (msg.type === 'audio') {
         contentHTML = `<audio src="${msg.fileUrl}" controls preload="metadata" style="width: 100%;"></audio>`;
     } else {
@@ -401,7 +385,7 @@ function renderMessage(msg) {
 
     msgDiv.innerHTML = `
         ${deleteBtnHTML}
-        <strong>${msg.sender}</strong>
+        <span class="msg-sender">${msg.sender}</span>
         ${replyHTML}
         ${contentHTML}
         <div class="msg-footer">
@@ -409,7 +393,7 @@ function renderMessage(msg) {
         </div>
     `;
 
-    // FITUR SWIPE BALAS PESAN
+    // Swipe Balas Pesan
     let startX = 0;
     let currentX = 0;
 
@@ -439,9 +423,7 @@ function renderMessage(msg) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// -------------------------------------------------------------
-// HAPUS PESAN
-// -------------------------------------------------------------
+// Delete Message Handling
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
     if (deleteModal) deleteModal.style.display = 'flex';
@@ -485,4 +467,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-                                                                          
+    
