@@ -9,7 +9,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Buat folder uploads jika belum ada
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
@@ -30,7 +29,6 @@ app.post('/upload', upload.single('file'), (req, res) => {
     res.json({ success: true, fileUrl: `/uploads/${req.file.filename}` });
 });
 
-// Database Sementara & Active Users Map
 const usersDb = {}; // { userId: { password, username } }
 const activeUsers = new Map(); // socket.id -> { userId, username }
 const chatHistory = [];
