@@ -28,6 +28,8 @@ const btnLogin = document.getElementById('btn-login');
 const headerUserName = document.getElementById('header-user-name');
 const headerUserId = document.getElementById('header-user-id');
 const onlineCountEl = document.getElementById('online-count');
+const onlineUsersList = document.getElementById('online-users-list');
+
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('message-input');
 const sendBtn = document.getElementById('send-btn');
@@ -56,17 +58,29 @@ const videoInput = document.getElementById('video-input');
 const uploadOverlay = document.getElementById('upload-overlay');
 const uploadStatusText = document.getElementById('upload-status-text');
 
-// Media Preview Modal
 const mediaPreviewModal = document.getElementById('media-preview-modal');
 const previewImage = document.getElementById('preview-image');
 const previewVideo = document.getElementById('preview-video');
 
-// Status Online
-socket.on('update-online-count', (count) => {
-    if (onlineCountEl) onlineCountEl.innerText = count;
+// UPDATE DAFTAR PENGGUNA ONLINE
+socket.on('update-online-users', (users) => {
+    if (onlineCountEl) onlineCountEl.innerText = users.length;
+    if (!onlineUsersList) return;
+
+    onlineUsersList.innerHTML = '';
+    users.forEach(u => {
+        const card = document.createElement('div');
+        card.className = 'online-user-card';
+        card.innerHTML = `
+            <span class="online-mini-dot"></span>
+            <span class="online-name">${u.username || 'User'}</span>
+            <span class="online-id-badge">ID: ${u.userId}</span>
+        `;
+        onlineUsersList.appendChild(card);
+    });
 });
 
-// Auto Login & Checking
+// Auto Login Check
 window.addEventListener('DOMContentLoaded', () => {
     const savedUserId = localStorage.getItem('chat_userId');
     const savedPassword = localStorage.getItem('chat_password');
@@ -99,7 +113,6 @@ socket.on('check-user-id-result', (res) => {
 
 function executeLogin(e) {
     if (e) e.preventDefault();
-
     const userId = inputUserId ? inputUserId.value.trim() : '';
     const password = inputPassword ? inputPassword.value.trim() : '';
     const name = inputName ? inputName.value.trim() : '';
@@ -342,13 +355,13 @@ function uploadFileWithProgress(file, typeName) {
             alert('Gagal mengunggah file.');
         }
     })
-    .catch(err => {
+    .catch(() => {
         if (uploadOverlay) uploadOverlay.style.display = 'none';
         alert('Terjadi kesalahan koneksi.');
     });
 }
 
-// Peninjauan Foto / Video (Lightbox Preview)
+// Peninjauan Foto / Video
 window.openMediaPreview = function(url, type) {
     if (!mediaPreviewModal) return;
     if (type === 'image') {
@@ -370,7 +383,7 @@ window.closeMediaPreview = function() {
     if (previewVideo) previewVideo.pause();
 };
 
-// Render Messages & Swipe to Reply
+// Render Messages & Swipe Balas
 socket.on('chat message', (msg) => {
     renderMessage(msg);
 });
@@ -405,9 +418,7 @@ function renderMessage(msg) {
     if (msg.type === 'image') {
         contentHTML = `<img src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'image')" />`;
     } else if (msg.type === 'video') {
-        contentHTML = `
-            <video src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'video')"></video>
-        `;
+        contentHTML = `<video src="${msg.fileUrl}" class="chat-media" onclick="openMediaPreview('${msg.fileUrl}', 'video')"></video>`;
     } else if (msg.type === 'audio') {
         contentHTML = `<audio src="${msg.fileUrl}" controls class="chat-vn" preload="metadata"></audio>`;
     } else {
@@ -426,7 +437,7 @@ function renderMessage(msg) {
         </div>
     `;
 
-    // Swipe Balas Pesan
+    // Swipe Gesture to Reply
     let startX = 0;
     let currentX = 0;
 
@@ -456,11 +467,10 @@ function renderMessage(msg) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// Delete Message Handling
+// Delete Modal Handling
 window.openDeleteModal = function(msgId, msgUserId) {
     pendingDeleteMsgId = msgId;
     if (deleteModal) deleteModal.style.display = 'flex';
-
     if (btnDeleteForEveryone) {
         btnDeleteForEveryone.style.display = (msgUserId === currentUserId) ? 'block' : 'none';
     }
@@ -500,4 +510,4 @@ socket.on('message-deleted-everyone', (data) => {
         el.innerHTML = `<em>Pesan ini telah dihapus</em>`;
     }
 });
-        
+                                   
