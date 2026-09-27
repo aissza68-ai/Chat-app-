@@ -28,7 +28,7 @@ function sendMessage() {
     document.getElementById("preview-msg").innerText = "Anda: " + messageText;
     document.getElementById("last-time").innerText = currentTime;
 
-    // Simulasi Anggota Grup Lain Membalas
+    // Simulasi Anggota Grup Membalas Otomatis
     triggerGroupAutoReply(messageText);
 }
 
@@ -39,7 +39,7 @@ function handleKeyPress(event) {
     }
 }
 
-// Simulasi Anggota Grup Mengetik & Membalas Otomatis
+// Simulasi Anggota Grup Mengetik & Membalas
 function triggerGroupAutoReply(userMsg) {
     const typingIndicator = document.getElementById("typing-indicator");
     const messagesContainer = document.getElementById("messages-container");
@@ -101,8 +101,4 @@ function sendAttachment() {
 
 function toggleGroupInfo() {
     alert("Informasi Grup: Grup Developer AI memiliki 5 anggota aktif.");
-}
-
-function switchChat(chatName) {
-    // Fungsi pindah chat jika nanti ditambahkan chat lain
 }
