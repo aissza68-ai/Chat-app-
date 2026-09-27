@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ruang Obrolan</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-screen" class="screen">
+        <div class="login-card">
+            <h2>Masuk Obrolan</h2>
+            <div class="input-group">
+                <label for="input-user-id">ID Pengguna (4 Angka)</label>
+                <input type="text" id="input-user-id" maxlength="4" placeholder="Contoh: 1234">
+            </div>
+            <div class="input-group" id="name-group">
+                <label for="input-name">Nama Pengguna</label>
+                <input type="text" id="input-name" placeholder="Nama Anda">
+            </div>
+            <div class="input-group">
+                <label for="input-password">Password (6 Angka)</label>
+                <input type="password" id="input-password" maxlength="6" placeholder="******">
+            </div>
+            <button id="btn-login">Masuk / Daftar</button>
+        </div>
+    </div>
+
+    <div id="chat-screen" class="screen" style="display: none;">
+        <div class="chat-header">
+            <h3>Ruang Obrolan</h3>
+            <div class="online-status">Online: <span id="online-count">0</span></div>
+        </div>
+
+        <div id="online-users-list" class="online-users-list"></div>
+
+        <div id="messages-container" class="messages-container"></div>
+
+        <div id="typing-indicator" class="typing-indicator" style="display: none;"></div>
+
+        <div id="reply-preview" class="reply-preview" style="display: none;">
+            <div class="reply-content">
+                <small>Membalas: <b id="reply-sender"></b></small>
+                <p id="reply-text"></p>
+            </div>
+            <button id="cancel-reply">&times;</button>
+        </div>
+
+        <div id="upload-progress-box" class="upload-progress-box" style="display: none;">
+            <div class="upload-info">
+                <span id="upload-label">Mengunggah...</span>
+                <span id="upload-percent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div id="progress-bar-fill" class="progress-bar-fill"></div>
+            </div>
+        </div>
+
+        <!-- Bar Rekaman VN -->
+        <div id="recording-box" class="recording-box" style="display: none;">
+            <div class="recording-indicator">
+                <span class="rec-dot"></span>
+                <span>Merekam Audio... <b id="rec-timer">00:00</b></span>
+            </div>
+            <div class="rec-actions">
+                <button id="cancel-rec-btn" title="Batal">❌</button>
+                <button id="stop-send-rec-btn" title="Kirim VN">🚀 Kirim</button>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <button id="image-btn" title="Kirim Gambar">📷</button>
+            <button id="video-btn" title="Kirim Video">🎬</button>
+            <button id="vn-btn" title="Kirim Voice Note">🎙️</button>
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            <input type="file" id="video-input" accept="video/*" style="display: none;">
+            <input type="text" id="message-input" placeholder="Tulis pesan..." autocomplete="off">
+            <button id="send-btn">Kirim</button>
+        </div>
+    </div>
+
+    <div id="custom-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <h4>Hapus Pesan?</h4>
+            <p>Pesan ini akan dihapus untuk semua orang dalam obrolan.</p>
+            <div class="modal-actions">
+                <button id="modal-cancel-btn" class="modal-btn btn-cancel">Batal</button>
+                <button id="modal-confirm-btn" class="modal-btn btn-delete">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
