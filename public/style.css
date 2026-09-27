@@ -435,5 +435,12 @@ body, html {
         min-width: 130px;
         margin-bottom: 0;
         padding: 6px 8px;
-    }
+    }/* Kunci total pesan terhapus agar tidak bisa di-swipe & interaksi mati */
+.message.deleted-message {
+    pointer-events: none !important;
+    touch-action: none !important;
+    opacity: 0.7;
+    font-style: italic;
+}
+    
 }
