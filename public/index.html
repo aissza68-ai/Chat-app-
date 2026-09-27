@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Chatting Modern</title>
+    <title>Aplikasi Chat Modern</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,7 +20,7 @@
                 <div class="input-group">
                     <input type="password" id="input-password" placeholder="Password" required>
                 </div>
-                <div class="input-group" id="name-group">
+                <div class="input-group">
                     <input type="text" id="input-name" placeholder="Nama Lengkap / Panggilan (Jika baru)" autocomplete="off">
                 </div>
                 <button type="submit" id="btn-login" class="primary-btn">Masuk / Daftar</button>
@@ -49,13 +49,13 @@
 
                 <div id="messages" class="messages-container"></div>
 
-                <!-- Preview Reply -->
+                <!-- Preview Reply / Swipe to Reply -->
                 <div id="reply-preview" class="reply-preview" style="display: none;">
                     <div class="reply-preview-content">
                         <strong id="reply-name"></strong>
                         <p id="reply-text"></p>
                     </div>
-                    <button id="cancel-reply">&times;</button>
+                    <button id="cancel-reply" class="tool-btn">&times;</button>
                 </div>
 
                 <!-- Recording VN Box -->
