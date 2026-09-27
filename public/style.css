@@ -8,7 +8,7 @@
 body, html {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #0f2027 100%);
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #0f2027 100%) !important;
     background-attachment: fixed;
     overflow: hidden;
 }
@@ -23,11 +23,11 @@ body, html {
 
 /* Login Card Glassmorphism */
 .login-card {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.1) !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 35px;
+    padding: 30px;
     border-radius: 20px;
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
     width: 90%;
@@ -37,47 +37,41 @@ body, html {
 }
 
 .login-card h2 {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-weight: 600;
+    color: #fff;
 }
 
 .login-card p {
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     color: rgba(255, 255, 255, 0.8);
     font-size: 14px;
 }
 
 .input-group {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     text-align: left;
 }
 
 .input-group input {
     width: 100%;
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.15) !important;
     border: 1px solid rgba(255, 255, 255, 0.25);
     border-radius: 12px;
     outline: none;
     font-size: 14px;
-    color: #fff;
-    transition: 0.3s;
+    color: #fff !important;
 }
 
 .input-group input::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
-.input-group input:focus {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: #00c6ff;
-    box-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
-}
-
 .primary-btn {
     width: 100%;
     padding: 12px;
-    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%) !important;
     color: white;
     border: none;
     border-radius: 12px;
@@ -85,47 +79,40 @@ body, html {
     cursor: pointer;
     font-size: 15px;
     box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);
-    transition: 0.2s;
 }
 
-.primary-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-}
-
-/* Chat Container Glassmorphism Transparan */
+/* Chat Screen & Container Glassmorphism */
 #chat-screen {
-    background: transparent;
+    background: transparent !important;
 }
 
 .chat-container {
     display: flex;
-    width: 95%;
-    max-width: 1200px;
-    height: 92vh;
-    background: rgba(255, 255, 255, 0.12);
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.08) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     overflow: hidden;
 }
 
-/* Sidebar */
+/* Sidebar khusus HP / Default */
 .sidebar {
-    width: 280px;
-    background: rgba(255, 255, 255, 0.08);
-    border-right: 1px solid rgba(255, 255, 255, 0.15);
+    width: 260px;
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
-    padding: 15px;
+    padding: 12px;
     flex-shrink: 0;
 }
 
 .sidebar h3 {
-    font-size: 15px;
-    margin-bottom: 15px;
+    font-size: 14px;
+    margin-bottom: 10px;
     color: #fff;
 }
 
@@ -137,10 +124,10 @@ body, html {
 .online-user-card {
     display: flex;
     align-items: center;
-    padding: 10px 12px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    margin-bottom: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px;
+    margin-bottom: 6px;
     border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
@@ -150,11 +137,10 @@ body, html {
     background: #31a24c;
     border-radius: 50%;
     margin-right: 8px;
-    box-shadow: 0 0 8px #31a24c;
 }
 
 .online-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: #fff;
     flex: 1;
@@ -164,9 +150,9 @@ body, html {
 }
 
 .online-id-badge {
-    font-size: 11px;
+    font-size: 10px;
     background: rgba(255, 255, 255, 0.2);
-    padding: 2px 6px;
+    padding: 2px 5px;
     border-radius: 4px;
     color: #fff;
 }
@@ -177,21 +163,21 @@ body, html {
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03) !important;
     min-width: 0;
 }
 
 .chat-header {
-    padding: 15px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 12px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.15) !important;
 }
 
 .chat-header h3 {
-    font-size: 16px;
+    font-size: 15px;
     color: #fff;
 }
 
@@ -201,54 +187,49 @@ body, html {
 
 .typing-indicator {
     font-style: italic;
-    font-size: 13px;
+    font-size: 12px;
     color: #00c6ff;
 }
 
 /* Messages Container */
 .messages-container {
     flex: 1;
-    padding: 20px;
+    padding: 15px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    background: transparent !important;
 }
 
 .message {
-    max-width: 70%;
-    padding: 12px 16px;
-    border-radius: 14px;
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 12px;
     position: relative;
     word-break: break-word;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-}
-
-/* Efek Swipe / Tarik untuk Reply */
-.message.swiping {
-    transform: translateX(-20px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .message.self {
-    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%);
+    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%) !important;
     color: white;
     align-self: flex-end;
-    border-bottom-right-radius: 4px;
+    border-bottom-right-radius: 2px;
 }
 
 .message.other {
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.9) !important;
     color: #050505;
     align-self: flex-start;
-    border-bottom-left-radius: 4px;
+    border-bottom-left-radius: 2px;
     border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
 .msg-sender {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     display: block;
     color: #004080;
 }
@@ -259,107 +240,90 @@ body, html {
 .msg-footer {
     display: flex;
     justify-content: flex-end;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .msg-time {
-    font-size: 10px;
+    font-size: 9px;
     opacity: 0.8;
 }
 
 .chat-media {
-    max-width: 240px;
-    max-height: 240px;
-    border-radius: 10px;
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
     cursor: pointer;
     display: block;
-    margin-top: 6px;
+    margin-top: 4px;
 }
 
 .chat-vn {
-    width: 210px;
-    height: 38px;
-    margin-top: 6px;
+    width: 180px;
+    height: 35px;
+    margin-top: 4px;
 }
 
 /* Chat Input Area */
 .chat-input-area {
-    padding: 15px;
-    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
-    gap: 10px;
-    background: rgba(255, 255, 255, 0.1);
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2) !important;
 }
 
 .tool-btn {
     background: none;
     border: none;
-    font-size: 22px;
+    font-size: 20px;
     cursor: pointer;
-    padding: 5px;
+    padding: 4px;
     color: #fff;
 }
 
 .chat-input-area input[type="text"] {
     flex: 1;
-    padding: 12px 18px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 25px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
     outline: none;
     font-size: 14px;
-    background: rgba(255, 255, 255, 0.15);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
 }
 
 .chat-input-area input[type="text"]::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
-.chat-input-area input[type="text"]:focus {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: #00c6ff;
-}
-
-/* Reply & Recording Preview Box */
+/* Reply & Recording Box */
 .reply-preview {
     background: rgba(255, 255, 255, 0.15);
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-left: 4px solid #00c6ff;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13px;
+    font-size: 12px;
     color: #fff;
 }
 
-.reply-box {
-    background: rgba(0, 0, 0, 0.15);
-    padding: 6px 10px;
-    border-radius: 6px;
-    margin-bottom: 6px;
-    border-left: 3px solid #00c6ff;
-    font-size: 12px;
-}
-
 .recording-box {
-    background: rgba(255, 77, 79, 0.2);
-    backdrop-filter: blur(10px);
-    padding: 12px 18px;
+    background: rgba(255, 77, 79, 0.25);
+    padding: 10px 15px;
     display: flex;
     align-items: center;
-    gap: 15px;
-    border-top: 1px solid rgba(255, 77, 79, 0.4);
+    gap: 12px;
     color: #fff;
 }
 
 .rec-dot {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     background: #ff4d4f;
     border-radius: 50%;
     animation: blink 1s infinite;
-    box-shadow: 0 0 10px #ff4d4f;
 }
 
 @keyframes blink {
@@ -372,40 +336,18 @@ body, html {
     background: #ff4d4f;
     color: white;
     border: none;
-    padding: 6px 14px;
-    border-radius: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
 }
 
 .icon-btn-success {
     background: #52c41a;
     color: white;
     border: none;
-    padding: 6px 14px;
-    border-radius: 8px;
+    padding: 5px 10px;
+    border-radius: 6px;
     cursor: pointer;
-    font-weight: bold;
-}
-
-.secondary-btn {
-    background: #6c757d;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-.danger-btn {
-    background: #ff4d4f;
-    color: white;
-    border: none;
-    padding: 10px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
 }
 
 /* Modal */
@@ -426,55 +368,46 @@ body, html {
 .modal-content {
     background: rgba(30, 40, 60, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 25px;
-    border-radius: 16px;
-    width: 320px;
+    padding: 20px;
+    border-radius: 14px;
+    width: 300px;
     text-align: center;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     color: #fff;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 
-.delete-icon {
-    position: absolute;
-    top: 6px;
-    right: 10px;
-    font-size: 14px;
-    cursor: pointer;
-    opacity: 0.4;
-}
-.message:hover .delete-icon {
-    opacity: 1;
-}
-
-/* Responsif HP */
+/* Khusus Tampilan Layar HP Supaya Sidebar Rapi di Atas */
 @media (max-width: 768px) {
     .chat-container {
-        flex-direction: column;
-        height: 100vh;
-        width: 100%;
-        border-radius: 0;
+        flex-direction: column !important;
     }
     .sidebar {
-        width: 100%;
-        height: 75px;
-        padding: 6px 10px;
+        width: 100% !important;
+        height: 65px !important;
+        padding: 5px 10px !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px;
     }
     .sidebar h3 {
         font-size: 11px;
-        margin-bottom: 3px;
+        margin-bottom: 0 !important;
+        white-space: nowrap;
     }
     .online-users-list {
-        display: flex;
+        display: flex !important;
+        flex-direction: row !important;
         gap: 6px;
-        overflow-x: auto;
-        overflow-y: hidden;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        width: 100%;
     }
     .online-user-card {
-        min-width: 120px;
-        margin-bottom: 0;
-        padding: 4px 8px;
+        min-width: 110px;
+        margin-bottom: 0 !important;
+        padding: 4px 6px !important;
+        flex-shrink: 0;
     }
 }
