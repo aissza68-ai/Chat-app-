@@ -1,17 +1,1 @@
-nohup: ignoring input
-Pseudo-terminal will not be allocated because stdin is not a terminal.
-** WARNING: connection is not using a post-quantum key exchange algorithm.
-** This session may be vulnerable to "store now, decrypt later" attacks.
-** The server may need to be upgraded. See https://openssh.com/pq.html
-Allocated port 8 for remote forward to localhost:3000
 
-
-
-===========================
-   Login is not allowed:
-   A tunnel with the same token (bUnn8juovfU) is already active. Close the existing tunnel, or use the force option.
-===========================
-
-
-
-Connection to a.pinggy.io closed by remote host.
