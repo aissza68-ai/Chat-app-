@@ -8,19 +8,19 @@
 html, body {
     width: 100%;
     height: 100%;
-    height: 100dvh; /* Menggunakan Dynamic Viewport Height untuk Chrome Mobile */
+    height: 100dvh;
     overflow: hidden;
     background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
     background-attachment: fixed;
     color: #ffffff;
 }
 
-/* Glass Effect Standard */
+/* Glassmorphism Effect */
 .glass {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
@@ -82,7 +82,7 @@ html, body {
     box-shadow: 0 4px 15px rgba(0, 198, 255, 0.4);
 }
 
-/* CHAT SCREEN CONTAINER */
+/* CHAT SCREEN */
 #chat-screen {
     display: flex;
     flex-direction: column;
@@ -92,73 +92,77 @@ html, body {
     position: relative;
 }
 
-/* HEADER GLASSMORPHISM */
+/* HEADER COMPACT & GLASS */
 .glass-header {
-    background: rgba(15, 32, 39, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    padding: 12px 20px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 12px;
     flex-shrink: 0;
     z-index: 100;
 }
 
-.header-info {
+.header-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 8px 14px;
+    border-radius: 14px;
 }
 
-.user-profile h3 {
-    font-size: 16px;
+.user-info-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-info-group h3 {
+    font-size: 14px;
     font-weight: 600;
 }
 
 .user-badge {
-    font-size: 11px;
-    background: rgba(255, 255, 255, 0.15);
-    padding: 2px 8px;
-    border-radius: 12px;
+    font-size: 10px;
+    background: rgba(0, 198, 255, 0.2);
+    border: 1px solid rgba(0, 198, 255, 0.4);
+    padding: 2px 6px;
+    border-radius: 8px;
     color: #00c6ff;
 }
 
 .status-badge {
-    font-size: 12px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: rgba(0, 0, 0, 0.2);
-    padding: 4px 10px;
-    border-radius: 20px;
+    gap: 5px;
+    background: rgba(0, 0, 0, 0.25);
+    padding: 3px 8px;
+    border-radius: 12px;
 }
 
 .status-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     background-color: #00ff88;
     border-radius: 50%;
-    box-shadow: 0 0 8px #00ff88;
+    box-shadow: 0 0 6px #00ff88;
 }
 
 /* AREA PESAN */
 #messages {
     flex: 1;
-    padding: 15px;
+    padding: 12px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     -webkit-overflow-scrolling: touch;
 }
 
 /* CHAT BUBBLES */
 .message {
     max-width: 80%;
-    padding: 12px 16px;
-    border-radius: 18px;
+    padding: 8px 12px;
+    border-radius: 16px;
     position: relative;
     word-break: break-word;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
@@ -187,30 +191,49 @@ html, body {
 
 .message .delete-icon {
     position: absolute;
-    top: 6px;
-    right: 10px;
+    top: 4px;
+    right: 8px;
     cursor: pointer;
     font-size: 14px;
     opacity: 0.6;
 }
 
+/* MEDIA & VN SIZE FIXES */
+.chat-media {
+    max-width: 220px;
+    max-height: 250px;
+    object-fit: cover;
+    border-radius: 12px;
+    cursor: pointer;
+    display: block;
+    margin-top: 4px;
+}
+
+.chat-vn {
+    width: 220px;
+    min-width: 180px;
+    height: 38px;
+    border-radius: 20px;
+    margin-top: 4px;
+}
+
 .reply-box {
     background: rgba(0, 0, 0, 0.25);
     border-left: 3px solid #00c6ff;
-    padding: 6px 10px;
+    padding: 4px 8px;
     border-radius: 6px;
-    margin: 6px 0;
-    font-size: 12px;
+    margin: 4px 0;
+    font-size: 11px;
 }
 
 .msg-footer {
     display: flex;
     justify-content: flex-end;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .msg-time {
-    font-size: 10px;
+    font-size: 9px;
     opacity: 0.6;
 }
 
@@ -228,7 +251,7 @@ html, body {
 .glass-bar {
     background: rgba(15, 32, 39, 0.9);
     backdrop-filter: blur(10px);
-    padding: 10px 15px;
+    padding: 8px 12px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
@@ -236,13 +259,26 @@ html, body {
     flex-shrink: 0;
 }
 
-/* FOOTER INPUT GLASSMORPHISM (DIAMBIL DARI BAWAH TERLINDUNGI BILAH BROWSER) */
+.rec-dot {
+    width: 10px;
+    height: 10px;
+    background: #ff3b30;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.3; }
+}
+
+/* FOOTER INPUT GLASSMORPHISM */
 .glass-footer {
-    background: rgba(15, 32, 39, 0.95);
+    background: rgba(15, 32, 39, 0.92);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    padding: 10px 15px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    padding: 8px 12px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
     border-top: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
     width: 100%;
@@ -250,7 +286,7 @@ html, body {
 
 .input-controls {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
 }
 
@@ -258,10 +294,10 @@ html, body {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.15);
     color: white;
-    padding: 10px;
+    padding: 8px;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -271,7 +307,7 @@ html, body {
 
 #message-input {
     flex: 1;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: rgba(0, 0, 0, 0.3);
@@ -285,11 +321,71 @@ html, body {
     border: none;
     color: white;
     font-weight: bold;
-    padding: 10px 18px;
+    padding: 9px 16px;
     border-radius: 20px;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 198, 255, 0.3);
     flex-shrink: 0;
+}
+
+/* LOADING MODAL GLASS WITH SPINNER */
+.upload-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(6px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1500;
+}
+
+.upload-card {
+    padding: 20px 30px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(255, 255, 255, 0.2);
+    border-top: 3px solid #00c6ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* MODAL PENINJAUAN MEDIA */
+.preview-content-box {
+    max-width: 90vw;
+    max-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.preview-content-box img, .preview-content-box video {
+    max-width: 100%;
+    max-height: 80vh;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.close-preview {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
 }
 
 /* MODAL HAPUS */
@@ -297,7 +393,7 @@ html, body {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(6px);
     display: flex;
     justify-content: center;
     align-items: center;
