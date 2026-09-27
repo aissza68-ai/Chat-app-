@@ -477,3 +477,17 @@ html, body {
 .btn-danger {
     background: rgba(255, 59, 48, 0.8) !important;
 }
+/* STYLES FOR MENTIONS / TAGS */
+.mention-tag {
+    color: #00c6ff;
+    font-weight: 600;
+    background: rgba(0, 198, 255, 0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+}
+
+.mention-all {
+    color: #ff3b30;
+    background: rgba(255, 59, 48, 0.2);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+}
